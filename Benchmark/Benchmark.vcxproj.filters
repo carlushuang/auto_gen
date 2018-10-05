@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="BasicClass.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ProblemControl.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="RuntimeControl.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\BoltAMPUtil.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\BoltCLUtil.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\CLUtil.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\OpenCVUtil.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\SDKBitMap.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\SDKFile.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\SDKThread.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\AMDCL2\SDKUtil\SDKUtil.hpp">
+      <Filter>Includes\utils\amdcl2</Filter>
+    </ClInclude>
+    <ClInclude Include="KernelWriter.h">
+      <Filter>KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="KernelWriterBasic.h">
+      <Filter>KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaFlat.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaSmem.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="helper_cl.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaDs.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaDsKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaFlatKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaSmemKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaMubuf.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaDemoConfig.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaMubufKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="RuntimeControl.cpp" />
+    <ClCompile Include="KernelWriter.cpp">
+      <Filter>KernelWriter</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaFlat.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaSmem.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ProblemControl.cpp" />
+    <ClCompile Include="IsaDs.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaSmemKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaFlatKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaDsKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaMubuf.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaMubufKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Includes">
+      <UniqueIdentifier>{29523e91-5957-45f4-b6c0-2b28ec3df1a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Includes\utils">
+      <UniqueIdentifier>{2ae1397a-fd8d-410d-966f-187768df57af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Includes\utils\amdcl2">
+      <UniqueIdentifier>{dd00e094-454f-48db-b608-0b85689807b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelWriter">
+      <UniqueIdentifier>{5010a587-ea4b-4946-9487-e37813c24f87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples">
+      <UniqueIdentifier>{b317f902-cc3f-4e96-aed3-cba511c680f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\Includes">
+      <UniqueIdentifier>{26985fd0-6812-4e02-8f0d-69df35a966a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\Kernels">
+      <UniqueIdentifier>{0e3f67dd-253f-4bf6-baff-c1fad8f57c56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelWriter\Samples">
+      <UniqueIdentifier>{2bd99694-3d03-45dd-a055-02a8f5ac444f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="KernelWriter\Samples\Includes">
+      <UniqueIdentifier>{b898ea81-4d87-4feb-956a-14a2d35a0bb5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Kernels\IsaFlat.s">
+      <Filter>Samples\Kernels</Filter>
+    </None>
+    <None Include="Kernels\IsaSmem.s">
+      <Filter>Samples\Kernels</Filter>
+    </None>
+    <None Include="Kernels\IsaDs.s">
+      <Filter>Samples\Kernels</Filter>
+    </None>
+  </ItemGroup>
+</Project>
