@@ -36,9 +36,10 @@ namespace krnelWriter
 		std::string name;
 		int perGprIdx;
 		int gprIdx;
-		int len;
+		int len;			// 为该变量分配的dword个数
 		int align;
-		bool forceLen;
+		int forceLen;		// 强制使用指定的dword个数
+		bool forceLenEn;	// 是否强制使用指定的dword个数
 	}t_gpr;
 
 	typedef struct ImmType
@@ -61,6 +62,7 @@ namespace krnelWriter
 		t_lab laber;
 		E_VarType type;
 
+		// 使用偏移i个的dword寄存器
 		VarType * operator+(int i)
 		{
 			struct VarType * np = new VarType();
@@ -78,15 +80,19 @@ namespace krnelWriter
 
 			return np;
 		}
+
+		// 强制使用i个数的dword寄存器
 		VarType * operator^(int i)
 		{
 			if (this->type == E_VarType::VAR_SGPR)
 			{
-				this->sgpr.forceLen = true;
+				this->sgpr.forceLen = i;
+				this->sgpr.forceLenEn = true;
 			}
 			else if (this->type == E_VarType::VAR_VGPR)
 			{
-				this->vgpr.forceLen = true;
+				this->vgpr.forceLen = i;
+				this->vgpr.forceLenEn = true;
 			}
 
 			return this;
@@ -188,7 +194,8 @@ namespace krnelWriter
 				opt->sgpr.gprIdx = idleIdx;
 				opt->sgpr.len = len;
 				opt->sgpr.align = align;
-				opt->sgpr.forceLen = false;
+				opt->sgpr.forceLen = 1;
+				opt->sgpr.forceLenEn = false;
 
 				if (idleIdx + len > sgprCountMax)
 					sgprCountMax = idleIdx + len;
@@ -244,7 +251,8 @@ namespace krnelWriter
 				opt->vgpr.gprIdx = idleIdx;
 				opt->vgpr.len = len;
 				opt->vgpr.align = align;
-				opt->vgpr.forceLen = false;
+				opt->vgpr.forceLen = 1;
+				opt->vgpr.forceLenEn = false;
 
 				if (idleIdx + len > vgprCountMax)
 					vgprCountMax = idleIdx + len;
@@ -307,10 +315,10 @@ namespace krnelWriter
 		{
 			if (opter->type == E_VarType::VAR_SGPR)
 			{
-				if (opter->sgpr.forceLen == true)
+				if (opter->sgpr.forceLenEn == true)
 				{
-					opter->sgpr.forceLen = false;
-					return std::string("s[" + d2s(opter->sgpr.gprIdx) + ":" + d2s(opter->sgpr.gprIdx + opter->sgpr.len - 1) + "]");
+					opter->sgpr.forceLenEn = false;
+					return std::string("s[" + d2s(opter->sgpr.gprIdx) + ":" + d2s(opter->sgpr.gprIdx + opter->sgpr.forceLen - 1) + "]");
 				}
 				else
 				{
@@ -326,10 +334,10 @@ namespace krnelWriter
 			}
 			else if (opter->type == E_VarType::VAR_VGPR)
 			{
-				if (opter->vgpr.forceLen == true)
+				if (opter->vgpr.forceLenEn == true)
 				{
-					opter->vgpr.forceLen = false;
-					return std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + opter->vgpr.len - 1) + "]");
+					opter->vgpr.forceLenEn = false;
+					return std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + opter->vgpr.forceLen - 1) + "]");
 				}
 				else
 				{
@@ -1389,16 +1397,9 @@ namespace krnelWriter
 			for (int i = 0; i < tmpIdx; i++)
 				str.append(" ");
 
-			if ((op[op.length() - 2] == '6') && (op[op.length() - 1] == '4'))
-				str.append(getVar(dst, 2));
-			else
-				str.append(getVar(dst));
-
+			str.append(getVar(dst));
 			str.append(", ");
-			if ((op[op.length() - 2] == '6') && (op[op.length() - 1] == '4'))
-				str.append(getVar(src, 2));
-			else
-				str.append(getVar(src));
+			str.append(getVar(src));
 
 			wrLine(str);
 		}
@@ -1414,7 +1415,6 @@ namespace krnelWriter
 				str.append(" ");
 
 			str.append(getVar(dst));
-
 			str.append(", ");
 			str.append(getVar(src0));
 			str.append(", ");
@@ -1434,7 +1434,6 @@ namespace krnelWriter
 				str.append(" ");
 
 			str.append(getVar(dst));
-
 			str.append(", ");
 			str.append(getVar(src0));
 			str.append(", ");
@@ -1456,7 +1455,6 @@ namespace krnelWriter
 				str.append(" ");
 
 			str.append(getVar(dst));
-
 			str.append(", ");
 			str.append(getVar(src0));
 			str.append(", ");
