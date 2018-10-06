@@ -35,14 +35,14 @@ int main(int argc, char *argv[])
 	// ----------------------------------------------------------------------
 	// Instrucion
 	// ----------------------------------------------------------------------
+	//ProblemCtrlBase *ds = new DsProblem("ds instruction demo");
+	//ds->RunProblem();
+	ProblemCtrlBase *smem = new SmemProblem("smem instruction demo");
+	smem->RunProblem();
 	//ProblemCtrlBase *flat = new FlatProblem("flat instruction demo");
 	//flat->RunProblem();
-	ProblemCtrlBase *ds = new DsProblem("ds instruction demo");
-	ds->RunProblem();
 	//ProblemCtrlBase *mubuf = new MubufProblem("mubuf instruction demo");
 	//mubuf->RunProblem();
-	//ProblemCtrlBase *smem = new SmemProblem("smem instruction demo");
-	//smem->RunProblem();
 	//ProblemCtrlBase *mubuf = new MubufProblem("mubuf instruction demo");
 	//mubuf->RunProblem();
 	//ProblemCtrlBase *global = new GlobalProblem();
