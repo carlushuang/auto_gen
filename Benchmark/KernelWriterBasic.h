@@ -38,6 +38,7 @@ namespace krnelWriter
 		int gprIdx;
 		int len;
 		int align;
+		bool forceLen;
 	}t_gpr;
 
 	typedef struct ImmType
@@ -77,23 +78,36 @@ namespace krnelWriter
 
 			return np;
 		}
+		VarType * operator^(int i)
+		{
+			if (this->type == E_VarType::VAR_SGPR)
+			{
+				this->sgpr.forceLen = true;
+			}
+			else if (this->type == E_VarType::VAR_VGPR)
+			{
+				this->vgpr.forceLen = true;
+			}
+
+			return this;
+		}
 	}Var;
 
 	typedef enum OpTypeEnum
 	{
-		ATM_ADD = 1,
-		ATM_SUB = 2,
-		ATM_INC = 3,
-		ATM_DEC = 4,
-		ATM_OR = 5,
-		ATM_XOR = 6,
-		ATM_AND = 7,
-		ATM_SMAX = 8,
-		ATM_SMIN = 9,
-		ATM_UMAX = 10,
-		ATM_UMIN = 11,
-		ATM_SWAP = 12,
-		ATM_CMPSWAP = 13,
+		OP_ADD = 1,
+		OP_SUB = 2,
+		OP_INC = 3,
+		OP_DEC = 4,
+		OP_OR = 5,
+		OP_XOR = 6,
+		OP_AND = 7,
+		OP_SMAX = 8,
+		OP_SMIN = 9,
+		OP_UMAX = 10,
+		OP_UMIN = 11,
+		OP_SWAP = 12,
+		OP_CMPSWAP = 13,
 	}E_OpType;
 	
 	class KernelWriterBasic
@@ -174,6 +188,7 @@ namespace krnelWriter
 				opt->sgpr.gprIdx = idleIdx;
 				opt->sgpr.len = len;
 				opt->sgpr.align = align;
+				opt->sgpr.forceLen = false;
 
 				if (idleIdx + len > sgprCountMax)
 					sgprCountMax = idleIdx + len;
@@ -229,6 +244,7 @@ namespace krnelWriter
 				opt->vgpr.gprIdx = idleIdx;
 				opt->vgpr.len = len;
 				opt->vgpr.align = align;
+				opt->vgpr.forceLen = false;
 
 				if (idleIdx + len > vgprCountMax)
 					vgprCountMax = idleIdx + len;
@@ -291,17 +307,41 @@ namespace krnelWriter
 		{
 			if (opter->type == E_VarType::VAR_SGPR)
 			{
-				if (len == 1)
-					return std::string("s[" + d2s(opter->sgpr.gprIdx) + "]");
+				if (opter->sgpr.forceLen == true)
+				{
+					opter->sgpr.forceLen = false;
+					return std::string("s[" + d2s(opter->sgpr.gprIdx) + ":" + d2s(opter->sgpr.gprIdx + opter->sgpr.len - 1) + "]");
+				}
 				else
-					return std::string("s[" + d2s(opter->sgpr.gprIdx) + ":" + d2s(opter->sgpr.gprIdx + len - 1) + "]");
+				{
+					if (len == 1)
+					{
+						return std::string("s[" + d2s(opter->sgpr.gprIdx) + "]");
+					}
+					else
+					{
+						return std::string("s[" + d2s(opter->sgpr.gprIdx) + ":" + d2s(opter->sgpr.gprIdx + len - 1) + "]");
+					}
+				}
 			}
 			else if (opter->type == E_VarType::VAR_VGPR)
 			{
-				if (len == 1)
-					return std::string("v[" + d2s(opter->vgpr.gprIdx) + "]");
+				if (opter->vgpr.forceLen == true)
+				{
+					opter->vgpr.forceLen = false;
+					return std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + opter->vgpr.len - 1) + "]");
+				}
 				else
-					return std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + len - 1) + "]");
+				{
+					if (len == 1)
+					{
+						return std::string("v[" + d2s(opter->vgpr.gprIdx) + "]");
+					}
+					else
+					{
+						std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + len - 1) + "]");
+					}
+				}
 			}
 			else if (opter->type == E_VarType::VAR_IMM)
 			{
@@ -431,8 +471,8 @@ namespace krnelWriter
 		/************************************************************************************/
 		/* SMEM																				*/
 		/************************************************************************************/
-		template <typename T1, typename T2, typename T3>
-		void s_load_dword(int num, T1 s_dst, T2 s_base, T3 offset)
+		template <typename T>
+		E_ReturnState s_load_dword(int num, Var* s_dst, Var* s_base, T offset, bool glc = true)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -457,11 +497,46 @@ namespace krnelWriter
 			str.append(getVar(s_base, 2));
 			str.append(", ");
 			str.append(getVar(offset));
-			
+
+			if (glc != true)
+			{
+				tmpIdx = FLAG_START_COL - str.length();
+				for (int i = 0; i < tmpIdx; i++)
+					str.append(" ");
+				str.append("glc");
+			}
+
 			wrLine(str);
+
+			if (s_dst->type != E_VarType::VAR_SGPR)
+			{
+				str.append("dest reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_base->type != E_VarType::VAR_SGPR)
+			{
+				str.append("base addr reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_base->sgpr.len != 2)
+			{
+				str.append("base addr reg not 64-bit");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (getVarType(offset) == E_VarType::VAR_VGPR)
+			{
+				str.append("offset reg are vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
 		}
-		template <typename T1, typename T2, typename T3>
-		void s_store_dword(int num, T1 s_dst, T2 s_base, T3 offset)
+		template <typename T>
+		E_ReturnState s_store_dword(int num, Var* s_dst, Var* s_base, T offset, bool glc = true)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -487,7 +562,241 @@ namespace krnelWriter
 			str.append(", ");
 			str.append(getVar(offset));
 
+			if (glc != true)
+			{
+				tmpIdx = FLAG_START_COL - str.length();
+				for (int i = 0; i < tmpIdx; i++)
+					str.append(" ");
+				str.append("glc");
+			}
+
 			wrLine(str);
+
+			if (s_dst->type != E_VarType::VAR_SGPR)
+			{
+				str.append("dest reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_base->type != E_VarType::VAR_SGPR)
+			{
+				str.append("base addr reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_base->sgpr.len != 2)
+			{
+				str.append("base addr reg not 64-bit");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (getVarType(offset) == E_VarType::VAR_VGPR)
+			{
+				str.append("offset reg are vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+		template <typename T>
+		E_ReturnState s_atomic_op(E_OpType op, Var* s_dat, Var* s_addr, T offset, bool glc = true)
+		{
+			int tmpIdx;
+			std::string str = "";
+			str.append("s_atomic_");
+			switch (op)
+			{
+			case OP_ADD:
+				str.append("add");
+				break;
+			case OP_INC:
+				str.append("inc");
+				break;
+			case OP_DEC:
+				str.append("dec");
+				break;
+			case OP_SUB:
+				str.append("sub");
+				break;
+			case OP_AND:
+				str.append("and");
+				break;
+			case OP_OR:
+				str.append("or");
+				break;
+			case OP_XOR:
+				str.append("xor");
+				break;
+			case OP_SMAX:
+				str.append("smax");
+				break;
+			case OP_UMAX:
+				str.append("umax");
+				break;
+			case OP_SMIN:
+				str.append("smin");
+				break;
+			case OP_UMIN:
+				str.append("umin");
+				break;
+			case OP_SWAP:
+				str.append("swap");
+				break;
+			case OP_CMPSWAP:
+				str.append("cmpswap");
+				break;
+			default:
+				str.append("invalid op");
+				return E_ReturnState::FAIL;
+			}
+
+			tmpIdx = PARAM_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+
+			str.append(getVar(s_dat));
+			str.append(", ");
+			str.append(getVar(s_addr, 2));
+			str.append(", ");
+			str.append(getVar(offset));
+
+			if (glc != true)
+			{
+				tmpIdx = FLAG_START_COL - str.length();
+				for (int i = 0; i < tmpIdx; i++)
+					str.append(" ");
+				str.append("glc");
+			}
+
+			wrLine(str);
+
+			if (s_dat->type != E_VarType::VAR_SGPR)
+			{
+				str.append("dest reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_addr->type != E_VarType::VAR_SGPR)
+			{
+				str.append("base addr reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_addr->sgpr.len != 2)
+			{
+				str.append("base addr reg not 64-bit");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (getVarType(offset) == E_VarType::VAR_VGPR)
+			{
+				str.append("offset reg are vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+		template <typename T>
+		E_ReturnState s_atomic_op2(E_OpType op, Var* s_dat, Var* s_addr, T offset, bool glc = true)
+		{
+			int tmpIdx;
+			std::string str = "";
+			str.append("s_atomic_");
+			switch (op)
+			{
+			case OP_ADD:
+				str.append("add");
+				break;
+			case OP_INC:
+				str.append("inc");
+				break;
+			case OP_DEC:
+				str.append("dec");
+				break;
+			case OP_SUB:
+				str.append("sub");
+				break;
+			case OP_AND:
+				str.append("and");
+				break;
+			case OP_OR:
+				str.append("or");
+				break;
+			case OP_XOR:
+				str.append("xor");
+				break;
+			case OP_SMAX:
+				str.append("smax");
+				break;
+			case OP_UMAX:
+				str.append("umax");
+				break;
+			case OP_SMIN:
+				str.append("smin");
+				break;
+			case OP_UMIN:
+				str.append("umin");
+				break;
+			case OP_SWAP:
+				str.append("swap");
+				break;
+			case OP_CMPSWAP:
+				str.append("cmpswap");
+				break;
+			default:
+				str.append("invalid op");
+				return E_ReturnState::FAIL;
+			}
+
+			str.append("_x2");
+			tmpIdx = PARAM_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+
+			str.append(getVar(s_dat, 2));
+			str.append(", ");
+			str.append(getVar(s_addr, 2));
+			str.append(", ");
+			str.append(getVar(offset));
+
+			if (glc != true)
+			{
+				tmpIdx = FLAG_START_COL - str.length();
+				for (int i = 0; i < tmpIdx; i++)
+					str.append(" ");
+				str.append("glc");
+			}
+
+			wrLine(str);
+
+			if (s_dat->type != E_VarType::VAR_SGPR)
+			{
+				str.append("dest reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_addr->type != E_VarType::VAR_SGPR)
+			{
+				str.append("base addr reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_addr->sgpr.len != 2)
+			{
+				str.append("base addr reg not 64-bit");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (getVarType(offset) == E_VarType::VAR_VGPR)
+			{
+				str.append("offset reg are vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
 		}
 
 		/************************************************************************************/
@@ -1037,6 +1346,14 @@ namespace krnelWriter
 		/************************************************************************************/
 		/* 通用操作																			*/
 		/************************************************************************************/
+		void op0(std::string op)
+		{
+			int tmpIdx;
+			std::string str = "";
+			str.append(op);
+
+			wrLine(str);
+		}
 		template <typename T1>
 		void op1(std::string op, T1 dst, int i_offset = 0)
 		{
@@ -1048,10 +1365,7 @@ namespace krnelWriter
 			for (int i = 0; i < tmpIdx; i++)
 				str.append(" ");
 
-			if ((op[op.length() - 2] == '6') && (op[op.length() - 1] == '4'))
-				str.append(getVar(dst, 2));
-			else
-				str.append(getVar(dst));
+			str.append(getVar(dst));
 
 			if (i_offset != 0)
 			{
