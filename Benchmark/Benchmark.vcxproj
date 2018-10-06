@@ -81,6 +81,8 @@
     <ClInclude Include="IsaMubufKernelWriter.h" />
     <ClInclude Include="IsaSmem.h" />
     <ClInclude Include="IsaSmemKernelWriter.h" />
+    <ClInclude Include="IsaSop.h" />
+    <ClInclude Include="IsaSopKernelWriter.h" />
     <ClInclude Include="KernelWriter.h" />
     <ClInclude Include="KernelWriterBasic.h" />
     <ClInclude Include="ProblemControl.h" />
@@ -103,6 +105,8 @@
     <ClCompile Include="IsaMubufKernelWriter.cpp" />
     <ClCompile Include="IsaSmem.cpp" />
     <ClCompile Include="IsaSmemKernelWriter.cpp" />
+    <ClCompile Include="IsaSop.cpp" />
+    <ClCompile Include="IsaSopKernelWriter.cpp" />
     <ClCompile Include="KernelWriter.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />

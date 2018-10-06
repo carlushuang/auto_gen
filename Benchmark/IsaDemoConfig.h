@@ -53,3 +53,16 @@ typedef struct ExtMubufProblemConfigType
 	size_t VectorSize;
 	float *h_a, *h_b, *h_c, *c_ref;
 }T_ExtMubufProblemConfig;
+
+/************************************************************************/
+/* SOP	                                                                */
+/************************************************************************/
+typedef struct ExtSopSolutionConfigTpye
+{
+}T_ExtSopSolutionConfig;
+
+typedef struct ExtSopProblemConfigType
+{
+	size_t VectorSize;
+	float *h_a, *h_b, *h_c, *c_ref;
+}T_ExtSopProblemConfig;

@@ -347,7 +347,7 @@ namespace krnelWriter
 					}
 					else
 					{
-						std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + len - 1) + "]");
+						return std::string("v[" + d2s(opter->vgpr.gprIdx) + ":" + d2s(opter->vgpr.gprIdx + len - 1) + "]");
 					}
 				}
 			}
@@ -932,9 +932,6 @@ namespace krnelWriter
 		/************************************************************************************/
 		/* FLAT																				*/
 		/************************************************************************************/
-		E_ReturnState flat_load_dword(int num, Var* v_dst, Var* v_addr, int i_offset = 0)
-		{
-		}
 		template <typename T>
 		E_ReturnState flat_load_dword(int num, Var* v_dst, Var* v_offset, T s_addr, int i_offset = 0)
 		{
@@ -1020,6 +1017,8 @@ namespace krnelWriter
 		{
 			int tmpIdx;
 			std::string str = "";
+
+			// op
 			str.append("global_load_dword");
 			if (num > 1)
 			{
@@ -1029,6 +1028,7 @@ namespace krnelWriter
 			for (int i = 0; i < tmpIdx; i++)
 				str.append(" ");
 
+			// v_dest
 			if (num == 1)
 			{
 				str.append(getVar(v_dst));
@@ -1038,10 +1038,27 @@ namespace krnelWriter
 				str.append(getVar(v_dst, num));
 			}
 			str.append(", ");
-			str.append(getVar(v_offset_addr, 2));
+
+			// v_offset(32-bit) / v_address(64-bit)
+			bool is64AddrMode = false;
+			if (getVarType(s_addr) == E_VarType::VAR_OFF)
+			{
+				is64AddrMode = true;
+			}
+			if (is64AddrMode == true)
+			{
+				str.append(getVar(v_offset_addr, 2));
+			}
+			else
+			{
+				str.append(getVar(v_offset_addr));
+			}
 			str.append(", ");
+
+			// s_address(32-bit) / "off"(64-bit)
 			str.append(getVar(s_addr));
 
+			// imm_offset
 			if (i_offset != 0)
 			{
 				tmpIdx = FLAG_START_COL - str.length();
@@ -1053,6 +1070,7 @@ namespace krnelWriter
 
 			wrLine(str);
 
+			// error check
 			if (!((num > 0) && (num <= 4)))
 			{
 				str.append("load data error");
@@ -1065,9 +1083,9 @@ namespace krnelWriter
 				wrLine(str);
 				return E_ReturnState::FAIL;
 			}
-			if (v_offset_addr->vgpr.len != 2)
+			if ((v_offset_addr->vgpr.len != 2)&&(is64AddrMode == true))
 			{
-				str.append("base addr reg not 64-bit");
+				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
 				return E_ReturnState::FAIL;
 			}
@@ -1179,6 +1197,8 @@ namespace krnelWriter
 		{
 			int tmpIdx;
 			std::string str = "";
+
+			// op
 			str.append("global_store_dword");
 
 			if (num > 1)
@@ -1189,8 +1209,23 @@ namespace krnelWriter
 			for (int i = 0; i < tmpIdx; i++)
 				str.append(" ");
 
-			str.append(getVar(v_offset_addr, 2));
+			// v_offset(32-bit) / v_address(64-bit)
+			bool is64AddrMode = false;
+			if (getVarType(s_addr) == E_VarType::VAR_OFF)
+			{
+				is64AddrMode = true;
+			}
+			if (is64AddrMode == true)
+			{
+				str.append(getVar(v_offset_addr, 2));
+			}
+			else
+			{
+				str.append(getVar(v_offset_addr));
+			}
 			str.append(", ");
+
+			// v_data
 			if (num == 1)
 			{
 				str.append(getVar(v_dat));
@@ -1200,8 +1235,11 @@ namespace krnelWriter
 				str.append(getVar(v_dat, num));
 			}
 			str.append(", ");
+
+			// s_address(32-bit) / "off"(64-bit)
 			str.append(getVar(s_addr));
 
+			// imm_offset
 			if (i_offset != 0)
 			{
 				tmpIdx = FLAG_START_COL - str.length();
@@ -1213,6 +1251,7 @@ namespace krnelWriter
 
 			wrLine(str);
 
+			// error check
 			if (!((num > 0) && (num <= 4)))
 			{
 				str.append("load data error");
@@ -1225,9 +1264,9 @@ namespace krnelWriter
 				wrLine(str);
 				return E_ReturnState::FAIL;
 			}
-			if (v_offset_addr->vgpr.len != 2)
+			if ((v_offset_addr->vgpr.len != 2) && (is64AddrMode == true))
 			{
-				str.append("base addr reg not 64-bit");
+				str.append("base addr reg not 64-bit for 64-bit addr mode");
 				wrLine(str);
 				return E_ReturnState::FAIL;
 			}
@@ -1253,6 +1292,301 @@ namespace krnelWriter
 			return E_ReturnState::SUCCESS;
 		}
 
+		template <typename T>
+		E_ReturnState flat_atomic_op(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0)
+		{
+			if (IsaArch >= E_IsaArch::Gfx900)
+			{
+				return flat_atomic_op_gfx900(op, v_dst, v_offset_addr, v_dat, s_addr, i_offset);
+			}
+			else
+			{
+				//return flat_load_dword_gfx800(op, v_dst, v_offset, i_offset);
+			}
+		}
+		template <typename T>
+		E_ReturnState flat_atomic_op_gfx900(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0)
+		{
+			int tmpIdx;
+			std::string str = "";
+
+			// op
+			str.append("global_atomic_");
+			switch (op)
+			{
+			case OP_ADD:
+				str.append("add");
+				break;
+			case OP_INC:
+				str.append("inc");
+				break;
+			case OP_DEC:
+				str.append("dec");
+				break;
+			case OP_SUB:
+				str.append("sub");
+				break;
+			case OP_AND:
+				str.append("and");
+				break;
+			case OP_OR:
+				str.append("or");
+				break;
+			case OP_XOR:
+				str.append("xor");
+				break;
+			case OP_SMAX:
+				str.append("smax");
+				break;
+			case OP_UMAX:
+				str.append("umax");
+				break;
+			case OP_SMIN:
+				str.append("smin");
+				break;
+			case OP_UMIN:
+				str.append("umin");
+				break;
+			case OP_SWAP:
+				str.append("swap");
+				break;
+			case OP_CMPSWAP:
+				str.append("cmpswap");
+				break;
+			default:
+				str.append("invalid op");
+				return E_ReturnState::FAIL;
+			}
+
+			tmpIdx = PARAM_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+
+			// return data
+			str.append(getVar(v_dst));
+			str.append(", ");
+
+			// v_offset(32-bit) / v_address(64-bit)
+			bool is64AddrMode = false;
+			if (getVarType(s_addr) == E_VarType::VAR_OFF)
+			{
+				is64AddrMode = true;
+			}
+			if (is64AddrMode == true)
+			{
+				str.append(getVar(v_offset_addr, 2));
+			}
+			else
+			{
+				str.append(getVar(v_offset_addr));
+			}
+			str.append(", ");
+
+			// source data
+			str.append(getVar(v_dat));
+			str.append(", ");
+
+			// s_address(32-bit) / "off"(64-bit)
+			str.append(getVar(s_addr));
+			
+			// imm_offset
+			if (i_offset != 0)
+			{
+				tmpIdx = FLAG_START_COL - str.length();
+				for (int i = 0; i < tmpIdx; i++)
+					str.append(" ");
+				str.append("offset:");
+				str.append(getVar(i_offset));
+			}
+
+			wrLine(str);
+
+			// error check
+			if (v_offset_addr->type != E_VarType::VAR_VGPR)
+			{
+				str.append("base addr reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if ((v_offset_addr->vgpr.len != 2) && (is64AddrMode == true))
+			{
+				str.append("base addr reg not 64-bit for 64-bit addr mode");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_dst->type != E_VarType::VAR_VGPR)
+			{
+				str.append("store data reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_dat->type != E_VarType::VAR_VGPR)
+			{
+				str.append("data reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if ((getVarType(s_addr) != E_VarType::VAR_SGPR) && (getVarType(s_addr) != E_VarType::VAR_OFF))
+			{
+				str.append("offset reg not sgpr nor off");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (!((i_offset >= -4096) && (i_offset <= 4095)))
+			{
+				str.append("imm_offset over 13-bit int");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+		template <typename T>
+		E_ReturnState flat_atomic_op2(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0)
+		{
+			if (IsaArch >= E_IsaArch::Gfx900)
+			{
+				return flat_atomic_op2_gfx900(op, v_dst, v_offset_addr, v_dat, s_addr, i_offset);
+			}
+			else
+			{
+				//return flat_load_dword_gfx800(op, v_dst, v_offset, i_offset);
+			}
+		}
+		template <typename T>
+		E_ReturnState flat_atomic_op2_gfx900(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0)
+		{
+			int tmpIdx;
+			std::string str = "";
+
+			// op
+			str.append("global_atomic_");
+			switch (op)
+			{
+			case OP_ADD:
+				str.append("add");
+				break;
+			case OP_INC:
+				str.append("inc");
+				break;
+			case OP_DEC:
+				str.append("dec");
+				break;
+			case OP_SUB:
+				str.append("sub");
+				break;
+			case OP_AND:
+				str.append("and");
+				break;
+			case OP_OR:
+				str.append("or");
+				break;
+			case OP_XOR:
+				str.append("xor");
+				break;
+			case OP_SMAX:
+				str.append("smax");
+				break;
+			case OP_UMAX:
+				str.append("umax");
+				break;
+			case OP_SMIN:
+				str.append("smin");
+				break;
+			case OP_UMIN:
+				str.append("umin");
+				break;
+			case OP_SWAP:
+				str.append("swap");
+				break;
+			case OP_CMPSWAP:
+				str.append("cmpswap");
+				break;
+			default:
+				str.append("invalid op");
+				return E_ReturnState::FAIL;
+			}
+			
+			str.append("x2");
+			tmpIdx = PARAM_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+
+			// return data
+			str.append(getVar(v_dst, 2));			
+			str.append(", ");
+			// v_offset(32-bit) / v_address(64-bit)
+			bool is64AddrMode = false;
+			if (getVarType(s_addr) == E_VarType::VAR_OFF)
+			{
+				is64AddrMode = true;
+			}
+			if (is64AddrMode == true)
+			{
+				str.append(getVar(v_offset_addr, 2));
+			}
+			else
+			{
+				str.append(getVar(v_offset_addr));
+			}
+			str.append(", ");
+
+			// s_address(32-bit) / "off"(64-bit)
+			str.append(getVar(s_addr));
+
+			// imm_offset
+			if (i_offset != 0)
+			{
+				tmpIdx = FLAG_START_COL - str.length();
+				for (int i = 0; i < tmpIdx; i++)
+					str.append(" ");
+				str.append("offset:");
+				str.append(getVar(i_offset));
+			}
+
+			wrLine(str);
+
+			// error check
+			if (v_offset_addr->type != E_VarType::VAR_VGPR)
+			{
+				str.append("base addr reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if ((v_offset_addr->vgpr.len != 2) && (is64AddrMode == true))
+			{
+				str.append("base addr reg not 64-bit for 64-bit addr mode");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_dst->type != E_VarType::VAR_VGPR)
+			{
+				str.append("store data reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_dat->type != E_VarType::VAR_VGPR)
+			{
+				str.append("store data reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if ((getVarType(s_addr) != E_VarType::VAR_SGPR) && (getVarType(s_addr) != E_VarType::VAR_OFF))
+			{
+				str.append("offset reg not sgpr nor off");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (!((i_offset >= -4096) && (i_offset <= 4095)))
+			{
+				str.append("imm_offset over 13-bit int");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+		
 		/************************************************************************************/
 		/* DS																				*/
 		/************************************************************************************/

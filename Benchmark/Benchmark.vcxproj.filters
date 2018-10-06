@@ -70,6 +70,12 @@
     <ClInclude Include="IsaMubufKernelWriter.h">
       <Filter>KernelWriter\Samples\Includes</Filter>
     </ClInclude>
+    <ClInclude Include="IsaSop.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaSopKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -100,6 +106,12 @@
       <Filter>Samples</Filter>
     </ClCompile>
     <ClCompile Include="IsaMubufKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaSop.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaSopKernelWriter.cpp">
       <Filter>KernelWriter\Samples</Filter>
     </ClCompile>
   </ItemGroup>
