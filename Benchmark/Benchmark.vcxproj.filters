@@ -80,9 +80,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
-    <ClCompile Include="KernelWriter.cpp">
-      <Filter>KernelWriter</Filter>
-    </ClCompile>
     <ClCompile Include="IsaFlat.cpp">
       <Filter>Samples</Filter>
     </ClCompile>

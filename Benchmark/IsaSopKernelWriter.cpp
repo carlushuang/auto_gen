@@ -3,7 +3,7 @@
 
 using namespace krnelWriter;
 
-#define	SOP_TEST		1
+#define	SOP_TEST		5
 
 KernelWriterIsaSop::KernelWriterIsaSop(T_ProblemConfig * probCfg, T_SolutionConfig * solCfg) :
 	KernelWriter(probCfg, solCfg)
@@ -27,6 +27,7 @@ void KernelWriterIsaSop::writeProgram()
 	Var * s_tmp0 = newSgpr("s_tmp0", 2, 2);
 	Var * s_tmp1 = newSgpr("s_tmp1", 2, 2);
 	Var * s_tmp2 = newSgpr("s_tmp2", 2, 2);
+	Var * s_tmp3 = newSgpr("s_tmp2", 2, 2);
 
 	s_load_dword(2, s_ptr_a, s_kernelArg, 0x00);
 	s_load_dword(2, s_ptr_b, s_kernelArg, 0x08);
@@ -193,6 +194,19 @@ void KernelWriterIsaSop::writeProgram()
 	/* Àý:																	*/
 	/************************************************************************/
 #if SOP_TEST == 5
+	Var * s_wave_id = newSgpr("s_wave_id");
+	Var * s_simd_id = newSgpr("s_simd_id");
+	Var * s_cu_id = newSgpr("s_cu_id");
+	Var * s_se_id = newSgpr("s_se_id");
+	Var * s_tg_id = newSgpr("s_tg_id");
+	f_read_hw_reg_hw_id(s_wave_id, s_simd_id, "off", s_cu_id, "off", s_se_id, s_tg_id, "off", "off", "off", "off");
+	s_store_dword(1, s_wave_id, s_addr_c, 4*0);
+	s_store_dword(1, s_simd_id, s_addr_c, 4*1);
+	s_store_dword(1, s_cu_id, s_addr_c, 4*2);
+	s_store_dword(1, s_se_id, s_addr_c, 4*3);
+	s_store_dword(1, s_tg_id, s_addr_c, 4*4);
+	s_wait_lgkmcnt(0);
+	op0("s_dcache_wb");
 #endif
 
 	clrVar();

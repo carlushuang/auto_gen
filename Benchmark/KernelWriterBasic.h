@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿/************************************************************************/
+/* 这里定义的是不依赖于问题配置的相关生成kernel的函数						*/
+/* 因此只需要include BasicClass.h										*/
+/************************************************************************/
+#pragma once
 
 #include "BasicClass.h"
 
@@ -28,7 +32,8 @@ namespace krnelWriter
 		VAR_IMM = 3,
 		VAR_LABER = 4,
 		VAR_STRING = 5,
-		VAR_OFF = 0
+		VAR_OFF = 0,
+		VAR_IDLE = -1
 	}E_VarType;
 
 	typedef struct GprType
@@ -128,6 +133,9 @@ namespace krnelWriter
 			memset(VgprState, 0, sizeof(int)*MAX_VGPR_COUNT);
 			OperatorMap = new std::map<std::string, Var*>();
 			IsaArch = isaArch;
+
+			idleVar = new Var;
+			idleVar->type = E_VarType::VAR_IDLE;
 		}
 		std::string * GetKernelString()
 		{
@@ -146,6 +154,7 @@ namespace krnelWriter
 		int vgprCount = 0, vgprCountMax = 0;
 		int ldsByteCount = 0;
 		std::map<std::string, Var*> *OperatorMap;
+		Var * idleVar;
 
 		Var * newSgpr(std::string name, int len = 1, int align = 1)
 		{
@@ -1851,6 +1860,265 @@ namespace krnelWriter
 				wrLine(str);
 				return E_ReturnState::FAIL;
 			}
+			return E_ReturnState::SUCCESS;
+		}
+#pragma endregion
+
+#pragma region CMB_OPT
+		/************************************************************************************/
+		/* 设置buffer寄存器																	*/
+		/************************************************************************************/
+		typedef enum desc_num_fmt_enum
+		{
+			num_fmt_unorm = 0,
+			num_fmt_snorm = 1,
+			num_fmt_uscaled = 2,
+			num_fmt_sscaled = 3,
+			num_fmt_uint = 4,
+			num_fmt_sint = 5,
+			num_fmt_reserved = 6,
+			num_fmt_float = 7
+		}e_desc_num_fmt;
+		typedef enum desc_dat_fmt_enum
+		{
+			dat_fmt_invalid = 0,
+			dat_fmt_8 = 1,
+			dat_fmt_16 = 2,
+			dat_fmt_8_8 = 3,
+			dat_fmt_32 = 4,
+			dat_fmt_16_16 = 5,
+			dat_fmt_10_11_11 = 6,
+			dat_fmt_11_11_10 = 7,
+			dat_fmt_10_10_10_2 = 8,
+			dat_fmt_2_10_10_10 = 9,
+			dat_fmt_8_8_8_8 = 10,
+			dat_fmt_32_32 = 11,
+			dat_fmt_16_16_16_16 = 12,
+			dat_fmt_32_32_32 = 13,
+			dat_fmt_32_32_32_32 = 14,
+			dat_fmt_reserved = 15
+		}e_desc_dat_fmt;
+		typedef enum desc_idx_stride_enum
+		{
+			idx_stride_8 = 0,
+			idx_stride_16 = 1,
+			idx_stride_32 = 2,
+			idx_stride_64 = 3
+		}e_desc_idx_stride;
+		E_ReturnState f_set_buffer_desc(
+			Var * s_desc,
+			Var * s_base,
+			uint stride,
+			uint record_num,
+			bool add_tid_en,
+			e_desc_num_fmt num_fmt = e_desc_num_fmt::num_fmt_float,
+			e_desc_dat_fmt dat_fmt = e_desc_dat_fmt::dat_fmt_32,
+			bool swizzle_en = false,
+			e_desc_idx_stride idx_stride = e_desc_idx_stride::idx_stride_8,
+			bool cache_swizzle = false)
+		{
+			// desc0
+			op2("s_mov_b64", s_desc, s_base);
+
+			// desc1
+			uint dsc1_tmp = stride & 0x3FFF;
+			dsc1_tmp = dsc1_tmp << 16;
+			if (cache_swizzle == true)
+			{
+				dsc1_tmp |= (uint)1 << 30;
+			}
+			if (swizzle_en == true)
+			{
+				dsc1_tmp |= (uint)1 << 31;
+			}
+			op3("s_or_b32", *s_desc + 1, *s_desc + 1, dsc1_tmp);
+
+			// desc2
+			op2("s_mov_b32", *s_desc + 2, record_num);
+
+			// desc3
+			uint dsc3_tmp = ((uint)num_fmt & 0x7) << 12;
+			if (add_tid_en == true)
+			{
+				dsc3_tmp |= ((stride & 0x3C000) >> 14) << 15;
+			}
+			else
+			{
+				dsc3_tmp |= ((uint)dat_fmt & 0xF) << 15;
+			}
+			if (swizzle_en == true)
+			{
+				dsc3_tmp |= (uint)idx_stride << 21;
+			}
+			if (add_tid_en == true)
+			{
+				dsc3_tmp |= 1 << 23;
+			}
+			op2("s_mov_b32", *s_desc + 3, dsc3_tmp);
+
+			// error check
+			std::string str = "";
+			if (s_desc->type != E_VarType::VAR_SGPR)
+			{
+				str.append("buffer descriptor not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_desc->sgpr.len != 4)
+			{
+				str.append("buffer descriptor not 4-dword");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (s_base->type != E_VarType::VAR_SGPR)
+			{
+				str.append("buffer obj base address not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+
+		/************************************************************************************/
+		/* 读取硬件寄存器																		*/
+		/************************************************************************************/
+		typedef enum hw_reg_enum
+		{
+			hw_reg_mode = 1,
+			hw_reg_status = 2,
+			hw_reg_hw_id = 4,
+			hw_reg_gpr_alloc = 5,
+			hw_reg_lds_alloc = 6,
+			hw_reg_ib_sts = 7
+		}e_hw_reg;
+		E_ReturnState f_read_hw_reg(Var * s_dst, e_hw_reg hwRegId)
+		{
+			uint imm = 0;
+			uint size = 31;
+			uint offset = 0;
+
+			imm = ((size & 0x1F) << 11) | ((offset & 0x0000001F) << 6) | ((uint)hwRegId & 0x3F);
+			op2("s_getreg_b32", s_dst, imm);
+
+			// error check
+			std::string str = "";
+			if (s_dst->type != E_VarType::VAR_SGPR)
+			{
+				str.append("dest reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+		template<typename T1,typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
+		E_ReturnState f_read_hw_reg_hw_id(
+			T1 s_wave_id,
+			T2 s_simd_id,
+			T3 s_pipe_id,
+			T4 s_cu_id,
+			T5 s_sh_id,
+			T6 s_se_id,
+			T7 s_tg_id,
+			T8 s_vm_id,
+			T9 s_queue_id,
+			T10 s_state_id,
+			T11 me_id)
+		{
+			uint src2;
+
+			Var* s_dest = newSgpr("s_dest");
+			f_read_hw_reg(s_dest, hw_reg_hw_id);
+
+			// wave id
+			if (getVarType(s_wave_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((4 & 0x7F) << 16) | ((0 & 0x1F) << 0);
+				op3("s_bfe_u32", s_wave_id, s_dest, src2);
+			}
+
+			// simd id
+			if (getVarType(s_simd_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((2 & 0x7F) << 16) | ((4 & 0x1F) << 0);
+				op3("s_bfe_u32", s_simd_id, s_dest, src2);
+			}
+
+			// pipe id
+			if (getVarType(s_pipe_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((2 & 0x7F) << 16) | ((6 & 0x1F) << 0);
+				op3("s_bfe_u32", s_pipe_id, s_dest, src2);
+			}
+
+			// cu id
+			if (getVarType(s_cu_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((4 & 0x7F) << 16) | ((8 & 0x1F) << 0);
+				op3("s_bfe_u32", s_cu_id, s_dest, src2);
+			}
+
+			// shader array id
+			if (getVarType(s_sh_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((1 & 0x7F) << 16) | ((12 & 0x1F) << 0);
+				op3("s_bfe_u32", s_sh_id, s_dest, src2);
+			}
+
+			// shader engine id
+			if (getVarType(s_se_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((2 & 0x7F) << 16) | ((13 & 0x1F) << 0);
+				op3("s_bfe_u32", s_se_id, s_dest, src2);
+			}
+
+			// thread group id
+			if (getVarType(s_tg_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((4 & 0x7F) << 16) | ((16 & 0x1F) << 0);
+				op3("s_bfe_u32", s_tg_id, s_dest, src2);
+			}
+
+			// vm id
+			if (getVarType(s_vm_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((4 & 0x7F) << 16) | ((20 & 0x1F) << 0);
+				op3("s_bfe_u32", s_vm_id, s_dest, src2);
+			}
+
+			// queue id
+			if (getVarType(s_queue_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((3 & 0x7F) << 16) | ((24 & 0x1F) << 0);
+				op3("s_bfe_u32", s_queue_id, s_dest, src2);
+			}
+
+			// gfx context(state) id
+			if (getVarType(s_state_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((3 & 0x7F) << 16) | ((27 & 0x1F) << 0);
+				op3("s_bfe_u32", s_state_id, s_dest, src2);
+			}
+
+			// microengine id
+			if (getVarType(me_id) != E_VarType::VAR_OFF)
+			{
+				src2 = ((2 & 0x7F) << 16) | ((30 & 0x1F) << 0);
+				op3("s_bfe_u32", me_id, s_dest, src2);
+			}
+
+			delVar(s_dest);
+
+			// error check
+			std::string str = "";
+			if ((getVarType(s_wave_id) != E_VarType::VAR_SGPR) && (getVarType(s_wave_id) != E_VarType::VAR_OFF))
+			{
+				str.append("wave_id reg not sgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
 			return E_ReturnState::SUCCESS;
 		}
 #pragma endregion

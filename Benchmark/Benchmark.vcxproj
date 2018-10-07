@@ -107,7 +107,6 @@
     <ClCompile Include="IsaSmemKernelWriter.cpp" />
     <ClCompile Include="IsaSop.cpp" />
     <ClCompile Include="IsaSopKernelWriter.cpp" />
-    <ClCompile Include="KernelWriter.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
