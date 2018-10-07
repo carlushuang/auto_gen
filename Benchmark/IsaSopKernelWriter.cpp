@@ -143,30 +143,27 @@ void KernelWriterIsaSop::writeProgram()
 	/* s_cbranch_exec(n)z													*/
 	/* s_cbranch_scc0/1														*/
 	/* s_cbranch_vcc(n)z													*/
-	/* s_cbranch_cdbgsys_													*/
 	/* s_getpc_b64															*/
 	/* s_setpc_b64															*/
 	/* s_swappc_b64															*/
 	/* s_call_b64															*/
 	/* s_rfe_b64															*/
 	/* s_rfe_restore_b64													*/
+	/* ³ÌÐò×´Ì¬ ------------------------------------------------------------ */
 	/* s_barrier															*/
 	/* s_endpgm_															*/
-	/* s_barrier															*/
-	/* s_wakeup																*/
-	/* s_sleep																*/
+	/* s_sethalt															*/
+	/* s_setkill															*/
+	/* s_trap																*/
+	/* s_setvskip															*/
+	/* s_setprio															*/
 	/* s_nop																*/
+	/* s_sleep																*/
+	/* s_wakeup																*/
+	/* debug -------------------------------------------------------------- */
+	/* s_ttracedata															*/
+	/* s_cbranch_cdbgsys_													*/
 	/* ==================================================================== */
-//s_decperflevel
-//s_icache_inv
-//s_incperflevel
-//s_sendmsg
-//s_sendmsghalt
-//s_sethalt
-//s_setkill
-//s_setprio
-//s_trap
-//s_ttracedata
 	/* Àý:																	*/
 	/************************************************************************/
 #if SOP_TEST == 4
@@ -174,15 +171,24 @@ void KernelWriterIsaSop::writeProgram()
 
 
 	/************************************************************************/
-	/* Ó²¼þ¼Ä´æÆ÷¿ØÖÆ															*/
+	/* Ó²¼þ×´Ì¬¿ØÖÆ															*/
 	/* ==================================================================== */
+	/* gpr ---------------------------------------------------------------- */
 	/* s_set_gpr_idx_on														*/
 	/* s_set_gpr_idx_idx													*/
 	/* s_set_gpr_idx_mode													*/
 	/* s_set_gpr_idx_off													*/
-	/* s_setvskip															*/
+	/* debug -------------------------------------------------------------- */
 	/* s_getreg_b32															*/
 	/* s_setreg_															*/
+	/* performance counter ------------------------------------------------ */
+	/* s_decperflevel														*/
+	/* s_incperflevel														*/
+	/* L1 I-cache --------------------------------------------------------- */
+	/* s_icache_inv															*/
+	/* message ------------------------------------------------------------ */
+	/* s_sendmsg															*/
+	/* s_sendmsghalt														*/
 	/* ==================================================================== */
 	/* Àý:																	*/
 	/************************************************************************/

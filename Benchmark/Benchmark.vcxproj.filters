@@ -134,25 +134,11 @@
     <Filter Include="Samples\Includes">
       <UniqueIdentifier>{26985fd0-6812-4e02-8f0d-69df35a966a4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Samples\Kernels">
-      <UniqueIdentifier>{0e3f67dd-253f-4bf6-baff-c1fad8f57c56}</UniqueIdentifier>
-    </Filter>
     <Filter Include="KernelWriter\Samples">
       <UniqueIdentifier>{2bd99694-3d03-45dd-a055-02a8f5ac444f}</UniqueIdentifier>
     </Filter>
     <Filter Include="KernelWriter\Samples\Includes">
       <UniqueIdentifier>{b898ea81-4d87-4feb-956a-14a2d35a0bb5}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Kernels\IsaFlat.s">
-      <Filter>Samples\Kernels</Filter>
-    </None>
-    <None Include="Kernels\IsaSmem.s">
-      <Filter>Samples\Kernels</Filter>
-    </None>
-    <None Include="Kernels\IsaDs.s">
-      <Filter>Samples\Kernels</Filter>
-    </None>
   </ItemGroup>
 </Project>

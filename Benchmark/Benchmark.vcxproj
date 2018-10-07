@@ -112,11 +112,6 @@
     <ClCompile Include="ProblemControl.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Kernels\IsaDs.s" />
-    <None Include="Kernels\IsaFlat.s" />
-    <None Include="Kernels\IsaSmem.s" />
-  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>RUNTIME_OCL;GPU_TIMER;%(PreprocessorDefinitions)</PreprocessorDefinitions>

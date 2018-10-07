@@ -13,28 +13,10 @@ E_ReturnState FlatSolution::GenerateSolutionConfigs()
 	T_SolutionConfig * solutionConfig;
 	T_ExtFlatSolutionConfig * extSol;
 
-	// ======================================================================
-	// solution config 1: ASM
-	// ======================================================================
-	{
-		extSol = new T_ExtFlatSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("ASM");
-		solutionConfig->extConfig = extSol;
-
-		//SolutionConfigList->push_back(solutionConfig);
-	}
-	// ======================================================================
-	// solution config 2: AutoGen
-	// ======================================================================
-	{
-		extSol = new T_ExtFlatSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("AutoGen");
-		solutionConfig->extConfig = extSol;
-
-		SolutionConfigList->push_back(solutionConfig);
-	}
+	extSol = new T_ExtFlatSolutionConfig();
+	solutionConfig = new T_SolutionConfig("AutoGen");
+	solutionConfig->extConfig = extSol;
+	SolutionConfigList->push_back(solutionConfig);
 
 	return E_ReturnState::SUCCESS;
 }
@@ -101,23 +83,14 @@ E_ReturnState FlatSolution::GenerateSolution()
 	// ======================================================================
 	// Éú³É´úÂë
 	// ======================================================================
-	if (SolutionConfig->ConfigName == "ASM")
-	{
-		SolutionConfig->KernelName = "IsaFlat";
-		SolutionConfig->KernelFile = "IsaFlat.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
-	}
-	else if (SolutionConfig->ConfigName == "AutoGen")
-	{
-		SolutionConfig->KernelName = "IsaFlat";
-		SolutionConfig->KernelFile = "IsaFlatAutoGen.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
+	SolutionConfig->KernelName = "IsaFlat";
+	SolutionConfig->KernelFile = "IsaFlatAutoGen.s";
+	SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
 
-		KernelWriterIsaFlat * kw = new KernelWriterIsaFlat(ProblemConfig, SolutionConfig);
-		kw->GenKernelString();
-		kw->PrintKernelString();
-		kw->SaveKernelString2File();
-	}
+	KernelWriterIsaFlat * kw = new KernelWriterIsaFlat(ProblemConfig, SolutionConfig);
+	kw->GenKernelString();
+	kw->PrintKernelString();
+	kw->SaveKernelString2File();
 
 	return E_ReturnState::SUCCESS;
 }

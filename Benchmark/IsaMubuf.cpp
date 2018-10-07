@@ -13,28 +13,10 @@ E_ReturnState MubufSolution::GenerateSolutionConfigs()
 	T_SolutionConfig * solutionConfig;
 	T_ExtMubufSolutionConfig * extSol;
 
-	// ======================================================================
-	// solution config 1: ASM
-	// ======================================================================
-	{
-		extSol = new T_ExtMubufSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("ASM");
-		solutionConfig->extConfig = extSol;
-
-		//SolutionConfigList->push_back(solutionConfig);
-	}
-	// ======================================================================
-	// solution config 2: AutoGen
-	// ======================================================================
-	{
-		extSol = new T_ExtMubufSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("AutoGen");
-		solutionConfig->extConfig = extSol;
-
-		SolutionConfigList->push_back(solutionConfig);
-	}
+	extSol = new T_ExtMubufSolutionConfig();
+	solutionConfig = new T_SolutionConfig("AutoGen");
+	solutionConfig->extConfig = extSol;
+	SolutionConfigList->push_back(solutionConfig);
 
 	return E_ReturnState::SUCCESS;
 }
@@ -103,23 +85,14 @@ E_ReturnState MubufSolution::GenerateSolution()
 	// ======================================================================
 	// Éú³É´úÂë
 	// ======================================================================
-	if (SolutionConfig->ConfigName == "ASM")
-	{
-		SolutionConfig->KernelName = "IsaMubuf";
-		SolutionConfig->KernelFile = "IsaMubuf.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
-	}
-	else if (SolutionConfig->ConfigName == "AutoGen")
-	{
-		SolutionConfig->KernelName = "IsaMubuf";
-		SolutionConfig->KernelFile = "IsaMubufAutoGen.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
+	SolutionConfig->KernelName = "IsaMubuf";
+	SolutionConfig->KernelFile = "IsaMubufAutoGen.s";
+	SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
 
-		KernelWriterIsaMubuf * kw = new KernelWriterIsaMubuf(ProblemConfig, SolutionConfig);
-		kw->GenKernelString();
-		kw->PrintKernelString();
-		kw->SaveKernelString2File();
-	}
+	KernelWriterIsaMubuf * kw = new KernelWriterIsaMubuf(ProblemConfig, SolutionConfig);
+	kw->GenKernelString();
+	kw->PrintKernelString();
+	kw->SaveKernelString2File();
 
 	return E_ReturnState::SUCCESS;
 }

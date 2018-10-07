@@ -13,28 +13,10 @@ E_ReturnState DsSolution::GenerateSolutionConfigs()
 	T_SolutionConfig * solutionConfig;
 	T_ExtDsSolutionConfig * extSol;
 
-	// ======================================================================
-	// solution config 1: ASM
-	// ======================================================================
-	{
-		extSol = new T_ExtDsSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("ASM");
-		solutionConfig->extConfig = extSol;
-
-		//SolutionConfigList->push_back(solutionConfig);
-	}
-	// ======================================================================
-	// solution config 2: AutoGen
-	// ======================================================================
-	{
-		extSol = new T_ExtDsSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("AutoGen");
-		solutionConfig->extConfig = extSol;
-
-		SolutionConfigList->push_back(solutionConfig);
-	}
+	extSol = new T_ExtDsSolutionConfig();
+	solutionConfig = new T_SolutionConfig("AutoGen");
+	solutionConfig->extConfig = extSol;
+	SolutionConfigList->push_back(solutionConfig);
 
 	return E_ReturnState::SUCCESS;
 }
@@ -101,23 +83,14 @@ E_ReturnState DsSolution::GenerateSolution()
 	// ======================================================================
 	// Éú³É´úÂë
 	// ======================================================================
-	if (SolutionConfig->ConfigName == "ASM")
-	{
-		SolutionConfig->KernelName = "IsaDs";
-		SolutionConfig->KernelFile = "IsaDs.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
-	}
-	else if (SolutionConfig->ConfigName == "AutoGen")
-	{
-		SolutionConfig->KernelName = "IsaDs";
-		SolutionConfig->KernelFile = "IsaDsAutoGen.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
+	SolutionConfig->KernelName = "IsaDs";
+	SolutionConfig->KernelFile = "IsaDsAutoGen.s";
+	SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
 
-		KernelWriterIsaDs * kw = new KernelWriterIsaDs(ProblemConfig, SolutionConfig);
-		kw->GenKernelString();
-		kw->PrintKernelString();
-		kw->SaveKernelString2File();
-	}
+	KernelWriterIsaDs * kw = new KernelWriterIsaDs(ProblemConfig, SolutionConfig);
+	kw->GenKernelString();
+	kw->PrintKernelString();
+	kw->SaveKernelString2File();
 
 	return E_ReturnState::SUCCESS;
 }

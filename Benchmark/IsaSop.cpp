@@ -13,28 +13,10 @@ E_ReturnState SopSolution :: GenerateSolutionConfigs()
 	T_SolutionConfig * solutionConfig;
 	T_ExtSopSolutionConfig * extSol;
 
-	// ======================================================================
-	// solution config 1: ASM
-	// ======================================================================
-	{
-		extSol = new T_ExtSopSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("ASM");
-		solutionConfig->extConfig = extSol;
-
-		//SolutionConfigList->push_back(solutionConfig);
-	}
-	// ======================================================================
-	// solution config 2: AutoGen
-	// ======================================================================
-	{
-		extSol = new T_ExtSopSolutionConfig();
-
-		solutionConfig = new T_SolutionConfig("AutoGen");
-		solutionConfig->extConfig = extSol;
-
-		SolutionConfigList->push_back(solutionConfig);
-	}
+	extSol = new T_ExtSopSolutionConfig();
+	solutionConfig = new T_SolutionConfig("AutoGen");
+	solutionConfig->extConfig = extSol;
+	SolutionConfigList->push_back(solutionConfig);
 
 	return E_ReturnState::SUCCESS;
 }
@@ -101,23 +83,14 @@ E_ReturnState SopSolution::GenerateSolution()
 	// ======================================================================
 	// Éú³É´úÂë
 	// ======================================================================
-	if (SolutionConfig->ConfigName == "ASM")
-	{
-		SolutionConfig->KernelName = "IsaSop";
-		SolutionConfig->KernelFile = "IsaSop.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
-	}
-	else if (SolutionConfig->ConfigName == "AutoGen")
-	{
-		SolutionConfig->KernelName = "IsaSop";
-		SolutionConfig->KernelFile = "IsaSopAutoGen.s";
-		SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
+	SolutionConfig->KernelName = "IsaSop";
+	SolutionConfig->KernelFile = "IsaSopAutoGen.s";
+	SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
 
-		KernelWriterIsaSop * kw = new KernelWriterIsaSop(ProblemConfig, SolutionConfig);
-		kw->GenKernelString();
-		kw->PrintKernelString();
-		kw->SaveKernelString2File();
-	}
+	KernelWriterIsaSop * kw = new KernelWriterIsaSop(ProblemConfig, SolutionConfig);
+	kw->GenKernelString();
+	kw->PrintKernelString();
+	kw->SaveKernelString2File();
 
 	return E_ReturnState::SUCCESS;
 }

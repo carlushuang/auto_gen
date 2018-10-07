@@ -7,8 +7,8 @@
 #include "ProblemControl.h"
 
 
-#include "IsaFlat.h"
 #include "IsaDs.h"
+#include "IsaFlat.h"
 #include "IsaMubuf.h"
 #include "IsaSmem.h"
 #include "IsaSop.h"
@@ -30,22 +30,20 @@ int main(int argc, char *argv[])
 	// ----------------------------------------------------------------------
 	//ProblemCtrlBase *ds = new DsProblem("ds instruction demo");
 	//ds->RunProblem();
-	//ProblemCtrlBase *smem = new SmemProblem("smem instruction demo");
-	//smem->RunProblem();
-	//ProblemCtrlBase *sop = new SopProblem("sop instruction demo");
-	//sop->RunProblem();
-	ProblemCtrlBase *flat = new FlatProblem("flat instruction demo");
-	flat->RunProblem();
+	//ProblemCtrlBase *flat = new FlatProblem("flat instruction demo");
+	//flat->RunProblem();
 	//ProblemCtrlBase *mubuf = new MubufProblem("mubuf instruction demo");
 	//mubuf->RunProblem();
+	//ProblemCtrlBase *smem = new SmemProblem("smem instruction demo");
+	//smem->RunProblem();
+	ProblemCtrlBase *sop = new SopProblem("sop instruction demo");
+	sop->RunProblem();
 
 	// ----------------------------------------------------------------------
 	// 示例
 	// ----------------------------------------------------------------------
 	//ProblemCtrlBase *vAdd = new VectorAddProblem("VectorAdd");
 	//vAdd->RunProblem();
-	//ProblemCtrlBase *pc = new ProducerConsumerProblem();
-	//pc->RunProblem();
 		
 	// ======================================================================
 	// ======================================================================
