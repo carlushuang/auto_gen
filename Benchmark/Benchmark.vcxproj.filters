@@ -64,9 +64,6 @@
     <ClInclude Include="IsaMubuf.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
-    <ClInclude Include="IsaDemoConfig.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
     <ClInclude Include="IsaMubufKernelWriter.h">
       <Filter>KernelWriter\Samples\Includes</Filter>
     </ClInclude>
@@ -75,6 +72,15 @@
     </ClInclude>
     <ClInclude Include="IsaSopKernelWriter.h">
       <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="SampleConfig.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorAddKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorAdd.h">
+      <Filter>Samples\Includes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="IsaSopKernelWriter.cpp">
       <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="VectorAddKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="VectorAdd.cpp">
+      <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

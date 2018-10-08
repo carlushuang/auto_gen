@@ -13,6 +13,8 @@
 #include "IsaSmem.h"
 #include "IsaSop.h"
 
+#include "VectorAdd.h"
+
 int main(int argc, char *argv[])
 {
 	RuntimeCtrl::InitRuntime(argc, argv);
@@ -36,14 +38,14 @@ int main(int argc, char *argv[])
 	//mubuf->RunProblem();
 	//ProblemCtrlBase *smem = new SmemProblem("smem instruction demo");
 	//smem->RunProblem();
-	ProblemCtrlBase *sop = new SopProblem("sop instruction demo");
-	sop->RunProblem();
+	//ProblemCtrlBase *sop = new SopProblem("sop instruction demo");
+	//sop->RunProblem();
 
 	// ----------------------------------------------------------------------
 	// 示例
 	// ----------------------------------------------------------------------
-	//ProblemCtrlBase *vAdd = new VectorAddProblem("VectorAdd");
-	//vAdd->RunProblem();
+	ProblemCtrlBase *vAdd = new VectAddProblem("VectorAdd");
+	vAdd->RunProblem();
 		
 	// ======================================================================
 	// ======================================================================

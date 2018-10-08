@@ -72,7 +72,7 @@
   <ItemGroup>
     <ClInclude Include="BasicClass.h" />
     <ClInclude Include="helper_cl.h" />
-    <ClInclude Include="IsaDemoConfig.h" />
+    <ClInclude Include="SampleConfig.h" />
     <ClInclude Include="IsaDs.h" />
     <ClInclude Include="IsaDsKernelWriter.h" />
     <ClInclude Include="IsaFlat.h" />
@@ -95,6 +95,8 @@
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKFile.hpp" />
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKThread.hpp" />
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKUtil.hpp" />
+    <ClInclude Include="VectorAdd.h" />
+    <ClInclude Include="VectorAddKernelWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IsaDs.cpp" />
@@ -110,6 +112,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
+    <ClCompile Include="VectorAdd.cpp" />
+    <ClCompile Include="VectorAddKernelWriter.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
