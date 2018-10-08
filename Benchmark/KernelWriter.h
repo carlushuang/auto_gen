@@ -8,6 +8,8 @@
 #include "KernelWriterBasic.h"
 #include "ProblemControl.h"
 
+#include <sys/stat.h>
+
 namespace krnelWriter
 {
 	class KernelWriter : public KernelWriterBasic
@@ -39,7 +41,14 @@ namespace krnelWriter
 		}
 		void SaveKernelString2File()
 		{
-			std::string SrcFileName = "../../../Kernels/" + kernelFile;
+			std::string kernelPath = "../../../Kernels/";
+			
+			if (access(kernelPath.c_str(), F_OK) == -1)
+			{
+				::mkdir(kernelPath.c_str(), 0777);
+			}
+
+			std::string SrcFileName = kernelPath + kernelFile;
 			std::ofstream fout(SrcFileName, std::ios::out);
 			if (!fout.is_open())
 			{
