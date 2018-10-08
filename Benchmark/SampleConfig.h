@@ -66,3 +66,16 @@ typedef struct ExtSopProblemConfigType
 	size_t VectorSize;
 	float *h_a, *h_b, *h_c, *c_ref;
 }T_ExtSopProblemConfig;
+
+/************************************************************************/
+/* Vector Add                                                           */
+/************************************************************************/
+typedef struct ExtVectAddSolutionConfigTpye
+{
+}T_ExtVectAddSolutionConfig;
+
+typedef struct ExtVectAddProblemConfigType
+{
+	size_t VectorSize;
+	float *h_a, *h_b, *h_c, *c_ref;
+}T_ExtVectAddProblemConfig;

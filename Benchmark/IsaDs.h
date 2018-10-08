@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IsaDemoConfig.h"
+#include "SampleConfig.h"
 #include "ProblemControl.h"
 #include "IsaDsKernelWriter.h"
 
