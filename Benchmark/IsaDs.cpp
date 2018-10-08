@@ -26,19 +26,19 @@ E_ReturnState DsSolution::GenerateSolutionConfigs()
 /************************************************************************/
 E_ReturnState DsSolution::InitDev()
 {
-	T_ExtDsProblemConfig * exCfg = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
 
-	DevMalloc((void**)&(d_a.ptr), exCfg->VectorSize * sizeof(float));
-	DevMalloc((void**)&(d_b.ptr), exCfg->VectorSize * sizeof(float));
-	DevMalloc((void**)&(d_c.ptr), exCfg->VectorSize * sizeof(float));
+	DevMalloc((void**)&(d_a.ptr), extProb->VectorSize * sizeof(float));
+	DevMalloc((void**)&(d_b.ptr), extProb->VectorSize * sizeof(float));
+	DevMalloc((void**)&(d_c.ptr), extProb->VectorSize * sizeof(float));
 
 	SolutionConfig->KernelArgus = new std::list<T_KernelArgu>;
 	d_a.size = sizeof(cl_mem);	d_a.isVal = false;	SolutionConfig->KernelArgus->push_back(d_a);
 	d_b.size = sizeof(cl_mem);	d_b.isVal = false;	SolutionConfig->KernelArgus->push_back(d_b);
 	d_c.size = sizeof(cl_mem);	d_c.isVal = false;	SolutionConfig->KernelArgus->push_back(d_c);
 
-	Copy2Dev((cl_mem)(d_a.ptr), exCfg->h_a, exCfg->VectorSize * sizeof(float));
-	Copy2Dev((cl_mem)(d_b.ptr), exCfg->h_b, exCfg->VectorSize * sizeof(float));
+	Copy2Dev((cl_mem)(d_a.ptr), extProb->h_a, extProb->VectorSize * sizeof(float));
+	Copy2Dev((cl_mem)(d_b.ptr), extProb->h_b, extProb->VectorSize * sizeof(float));
 
 	return E_ReturnState::SUCCESS;
 }
@@ -48,8 +48,8 @@ E_ReturnState DsSolution::InitDev()
 /************************************************************************/
 E_ReturnState DsSolution::GetBackResult()
 {
-	T_ExtDsProblemConfig * exCfg = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
-	Copy2Hst(exCfg->h_c, (cl_mem)(d_c.ptr), exCfg->VectorSize * sizeof(float));
+	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	Copy2Hst(extProb->h_c, (cl_mem)(d_c.ptr), extProb->VectorSize * sizeof(float));
 }
 
 /************************************************************************/
@@ -126,23 +126,23 @@ E_ReturnState DsProblem::GenerateProblemConfigs()
 E_ReturnState DsProblem::InitHost()
 {
 	std::cout << "Ds Instruction init" << ProblemConfig->ConfigName << std::endl;
-	T_ExtDsProblemConfig * exCfg = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
 
-	ProblemConfig->Calculation = exCfg->VectorSize; 
+	ProblemConfig->Calculation = extProb->VectorSize; 
 	ProblemConfig->TheoryElapsedTime = ProblemConfig->Calculation / RuntimeCtrlBase::DeviceInfo.Fp32Flops;
 	printf("Calculation = %.3f G\n", ProblemConfig->Calculation * 1e-9);
 	printf("TheoryElapsedTime = %.3f us \n", ProblemConfig->TheoryElapsedTime * 1e6);
 
-	exCfg->h_a = (float*)HstMalloc(exCfg->VectorSize * sizeof(float));
-	exCfg->h_b = (float*)HstMalloc(exCfg->VectorSize * sizeof(float));
-	exCfg->h_c = (float*)HstMalloc(exCfg->VectorSize * sizeof(float));
-	exCfg->c_ref = (float*)HstMalloc(exCfg->VectorSize * sizeof(float));
+	extProb->h_a = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
+	extProb->h_b = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
+	extProb->h_c = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
+	extProb->c_ref = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
 		
-	for (int i = 0; i < exCfg->VectorSize; i++)
+	for (int i = 0; i < extProb->VectorSize; i++)
 	{
-		exCfg->h_a[i] = i;
-		exCfg->h_b[i] = 2;
-		exCfg->h_c[i] = 0;
+		extProb->h_a[i] = i;
+		extProb->h_b[i] = 2;
+		extProb->h_c[i] = 0;
 	}
 
 	return E_ReturnState::SUCCESS;
@@ -154,11 +154,11 @@ E_ReturnState DsProblem::InitHost()
 E_ReturnState DsProblem::Host()
 {
 	printf("Ds instruction host.\n");
-	T_ExtDsProblemConfig * exCfg = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
 
-	for (int i = 0; i < exCfg->VectorSize; i++)
+	for (int i = 0; i < extProb->VectorSize; i++)
 	{
-		exCfg->c_ref[i] = exCfg->h_a[i];
+		extProb->c_ref[i] = extProb->h_a[i];
 	}
 	return E_ReturnState::SUCCESS;
 }
@@ -169,14 +169,14 @@ E_ReturnState DsProblem::Host()
 E_ReturnState DsProblem::Verify()
 {
 	printf("Ds instruction verify.\n");
-	T_ExtDsProblemConfig * exCfg = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
 		
 	float diff = 0;
-	for (int i = 0; i < exCfg->VectorSize; i++)
+	for (int i = 0; i < extProb->VectorSize; i++)
 	{
-		diff += (exCfg->c_ref[i] - exCfg->h_c[i]) * (exCfg->c_ref[i] - exCfg->h_c[i]);
+		diff += (extProb->c_ref[i] - extProb->h_c[i]) * (extProb->c_ref[i] - extProb->h_c[i]);
 	}
-	diff /= exCfg->VectorSize;
+	diff /= extProb->VectorSize;
 
 	printf("mean err = %.1f.\n", diff);
 	if (diff > MIN_FP32_ERR)
@@ -195,11 +195,11 @@ E_ReturnState DsProblem::Verify()
 void DsProblem::ReleaseHost()
 {
 	printf("Ds instruction destroy.\n");
-	T_ExtDsProblemConfig * exCfg = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
 
-	HstFree(exCfg->h_a);
-	HstFree(exCfg->h_b);
-	HstFree(exCfg->h_c);
-	HstFree(exCfg->c_ref);
+	HstFree(extProb->h_a);
+	HstFree(extProb->h_b);
+	HstFree(extProb->h_c);
+	HstFree(extProb->c_ref);
 }
 #pragma endregion
