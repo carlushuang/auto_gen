@@ -3,13 +3,11 @@
 
 using namespace krnelWriter;
 
-#define FLAT_TEST		1
-
 KernelWriterVectAdd::KernelWriterVectAdd(T_ProblemConfig * probCfg, T_SolutionConfig * solCfg) :
 	KernelWriter(probCfg, solCfg)
 {
-	extProbCfg = (T_ExtFlatProblemConfig *)problemConfig->extConfig;
-	extSolCfg = (T_ExtFlatSolutionConfig *)solutionConfig->extConfig;
+	extProbCfg = (T_ExtVectAddProblemConfig *)problemConfig->extConfig;
+	extSolCfg = (T_ExtVectAddSolutionConfig *)solutionConfig->extConfig;
 
 	N = extProbCfg->VectorSize;
 }
@@ -24,8 +22,9 @@ void KernelWriterVectAdd::writeProgram()
 	v_b_addr = newVgpr("v_b_addr", 2, 2);
 	v_c_addr = newVgpr("v_c_addr", 2, 2);
 
-	Var * v_tmp1 = newVgpr("v_tmp1");
-	Var * v_tmp2 = newVgpr("v_tmp2");
+	Var * v_a = newVgpr("var_a");
+	Var * v_b = newVgpr("var_b");
+	Var * v_c = newVgpr("var_c");
 
 	s_load_dword(2, s_ptr_a, s_kernelArg, 0x00);
 	s_load_dword(2, s_ptr_b, s_kernelArg, 0x08);
@@ -36,13 +35,13 @@ void KernelWriterVectAdd::writeProgram()
 	f_linear_addr(s_ptr_b, v_b_addr);
 	f_linear_addr(s_ptr_c, v_c_addr);
 
-#if FLAT_TEST == 1
-	flat_load_dword(1, v_tmp1, v_a_addr, "off");
-	flat_load_dword(1, v_tmp2, v_b_addr, "off");
+	flat_load_dword(1, v_a, v_a_addr, "off");
+	flat_load_dword(1, v_b, v_b_addr, "off");
 	s_wait_vmcnt(0);
-	op3("v_add_f32", v_tmp2, v_tmp1, v_tmp2);
-	flat_store_dword(1, v_c_addr, v_tmp2, "off");
-#endif
+	op3("v_add_f32", v_c, v_a, v_b);
+	flat_store_dword(1, v_c_addr, v_c, "off");
 
-	delVar(v_tmp1);
+	delVar(v_a);
+	delVar(v_b);
+	delVar(v_c);
 }

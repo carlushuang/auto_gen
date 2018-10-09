@@ -11,8 +11,8 @@ public:
 
 protected:
 	int N = 0;
-	T_ExtFlatProblemConfig * extProbCfg;	// 当前正在处理的问题扩展配置
-	T_ExtFlatSolutionConfig * extSolCfg;	// 当前正在处理的解决方案扩展配置
+	T_ExtVectAddProblemConfig * extProbCfg;	// 当前正在处理的问题扩展配置
+	T_ExtVectAddSolutionConfig * extSolCfg;	// 当前正在处理的解决方案扩展配置
 
 	krnelWriter::Var * s_ptr_a;
 	krnelWriter::Var * s_ptr_b;
