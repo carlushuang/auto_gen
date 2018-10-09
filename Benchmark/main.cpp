@@ -14,6 +14,7 @@
 #include "IsaSop.h"
 
 #include "VectorAdd.h"
+#include "ReducAdd.h"
 
 int main(int argc, char *argv[])
 {
@@ -44,8 +45,10 @@ int main(int argc, char *argv[])
 	// ----------------------------------------------------------------------
 	// 示例
 	// ----------------------------------------------------------------------
-	ProblemCtrlBase *vAdd = new VectAddProblem("VectorAdd");
-	vAdd->RunProblem();
+	//ProblemCtrlBase *vAdd = new VectAddProblem("VectorAdd");
+	//vAdd->RunProblem();
+	ProblemCtrlBase *rdcAdd = new ReducAddProblem("ReducAdd");
+	rdcAdd->RunProblem();
 		
 	// ======================================================================
 	// ======================================================================

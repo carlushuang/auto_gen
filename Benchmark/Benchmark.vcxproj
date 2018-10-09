@@ -72,6 +72,8 @@
   <ItemGroup>
     <ClInclude Include="BasicClass.h" />
     <ClInclude Include="helper_cl.h" />
+    <ClInclude Include="ReducAdd.h" />
+    <ClInclude Include="ReducAddKernelWriter.h" />
     <ClInclude Include="SampleConfig.h" />
     <ClInclude Include="IsaDs.h" />
     <ClInclude Include="IsaDsKernelWriter.h" />
@@ -111,6 +113,8 @@
     <ClCompile Include="IsaSopKernelWriter.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />
+    <ClCompile Include="ReducAdd.cpp" />
+    <ClCompile Include="ReducAddKernelWriter.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
     <ClCompile Include="VectorAdd.cpp" />
     <ClCompile Include="VectorAddKernelWriter.cpp" />

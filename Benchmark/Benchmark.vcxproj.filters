@@ -82,6 +82,12 @@
     <ClInclude Include="VectorAdd.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
+    <ClInclude Include="ReducAddKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ReducAdd.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -121,6 +127,12 @@
       <Filter>KernelWriter\Samples</Filter>
     </ClCompile>
     <ClCompile Include="VectorAdd.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ReducAddKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ReducAdd.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>

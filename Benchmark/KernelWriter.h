@@ -121,7 +121,7 @@ namespace krnelWriter
 			wrLine("    - { Name: " + kernelName + ",");
 			wrLine("        SymbolName: " + kernelName + ",");
 			wrLine("        Language: OpenCL C, LanguageVersion: [ 1, 2 ],");
-			wrLine("        Attrs: { ReqdWorkGroupSize: [ " + d2s(groupSize0) + ", 1, 1 ] }");
+			wrLine("        Attrs: { ReqdWorkGroupSize: [ " + d2s(groupSize0) + ", " + d2s(groupSize1) + ", " + d2s(groupSize2) + " ] }");
 			wrLine("        CodeProps: { KernargSegmentSize: 24, GroupSegmentFixedSize : 0, PrivateSegmentFixedSize : 0, KernargSegmentAlign : 8, WavefrontSize : 64, MaxFlatWorkGroupSize : 512 }");
 			wrLine("        Args:");
 			wrLine("        - { Name: d_in  , Size : 8, Align : 8, ValueKind : GlobalBuffer, ValueType : F32, TypeName : 'float*', AddrSpaceQual : Global, IsConst : true }");
@@ -145,6 +145,7 @@ namespace krnelWriter
 			s_gid_z = newSgpr("s_gid_z");
 
 			v_tid_x = newVgpr("v_tid_x");
+			v_tid_y = newVgpr("v_tid_y");
 
 			START_PROG = newLaber("START_PROG");
 			END_PROG = newLaber("END_PROG");
@@ -159,7 +160,7 @@ namespace krnelWriter
 			wrLine("enable_sgpr_workgroup_id_x = 1");
 			wrLine("enable_sgpr_workgroup_id_y = 1");
 			wrLine("enable_sgpr_workgroup_id_z = 1");
-			wrLine("enable_vgpr_workitem_id = 0");
+			wrLine("enable_vgpr_workitem_id = 2");
 			wrLine("is_ptr64 = 1");
 			wrLine("float_mode = 240");
 			wrLine("granulated_wavefront_sgpr_count = " + d2s((sgprCountMax - 1) / 4));

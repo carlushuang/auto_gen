@@ -404,6 +404,15 @@ namespace krnelWriter
 			}
 		}
 		E_VarType getVarType(double immVal) { return E_VarType::VAR_IMM;}
+
+		int getVarVal(double immVal) { return immVal; }
+		int getVarVal(Var * reg)
+		{
+			if (reg->type == E_VarType::VAR_SGPR)
+				return reg->sgpr.gprIdx;
+			else if (reg->type == E_VarType::VAR_VGPR)
+				return reg->vgpr.gprIdx;
+		}
 		/************************************************************************/
 		/* 通用函数		                                                        */
 		/************************************************************************/
@@ -2119,6 +2128,90 @@ namespace krnelWriter
 				return E_ReturnState::FAIL;
 			}
 
+			return E_ReturnState::SUCCESS;
+		}
+
+		template<typename T>
+		Var * f_s_loop(Var * s_cnt,T loopCnt, std::string loopName)
+		{
+			Var * t_lab = newLaber(loopName);
+			op2("s_mov_b32", s_cnt, loopCnt);
+			tableCnt = 0;
+			wrLine(loopName + ":");
+			tableCnt++;
+			return t_lab;
+		}
+		E_ReturnState f_e_loop(Var * s_cnt, Var * loopLab)
+		{
+			op3("s_sub_u32", s_cnt, s_cnt, 1);
+			op2("s_cmpk_eq_i32", s_cnt, 0);
+			op1("s_cbranch_scc0", loopLab);
+		}
+		E_ReturnState f_e_loop(Var * s_cnt, std::string loopName)
+		{
+			op3("s_sub_u32", s_cnt, s_cnt, 1);
+			op2("s_cmpk_eq_i32", s_cnt, 0);
+			Var * t_lab = newLaber(loopName);
+			op1("s_cbranch_scc0", t_lab);
+			delVar(s_cnt);
+		}
+
+		template<typename T>
+		E_ReturnState f_addr_add_byte(Var * addr, T offset)
+		{
+			if (addr->type == E_VarType::VAR_VGPR)
+			{
+				if (getVarType(offset) == E_VarType::VAR_IMM)					
+				{
+					int imm_offset = getVarVal(offset);
+					if ((imm_offset >= -16) && (imm_offset <= 64))
+					{
+						op4("v_add_co_u32", addr, "vcc", addr, offset);
+						op5("v_addc_co_u32", *addr + 1, "vcc", 0, *addr + 1, "vcc");
+					}
+					else
+					{
+						Var * t_offset = newVgpr("t_offset");
+						op2("v_mov_b32", t_offset, offset);
+						op4("v_add_co_u32", addr, "vcc", addr, offset);
+						op5("v_addc_co_u32", *addr + 1, "vcc", 0, *addr + 1, "vcc");
+						delVar(t_offset);
+					}
+				}				
+				else
+				{
+					op4("v_add_co_u32", addr, "vcc", addr, offset);
+					op5("v_addc_co_u32", *addr + 1, "vcc", 0, *addr + 1, "vcc");
+				}
+			}
+			else if (addr->type == E_VarType::VAR_SGPR)
+			{
+				if (getVarType(offset) == E_VarType::VAR_IMM)
+				{
+					int imm_offset = getVarVal(offset);
+					if ((imm_offset >= -16) && (imm_offset <= 64))
+					{
+						op3("s_add_u32", addr, addr, offset);
+						op3("s_addc_u32", *addr + 1, *addr + 1, 0);
+					}
+					else
+					{
+						Var * t_offset = newSgpr("t_offset");
+						op2("s_mov_b32", t_offset, offset);
+						op3("s_add_u32", addr, addr, t_offset);
+						op3("s_addc_u32", *addr + 1, *addr + 1, 0);
+					}
+				}
+				else
+				{
+					op3("s_add_u32", addr, addr, offset);
+					op3("s_addc_u32", *addr + 1, *addr + 1, 0);
+				}
+			}
+			else
+			{
+				return E_ReturnState::FAIL;
+			}
 			return E_ReturnState::SUCCESS;
 		}
 #pragma endregion

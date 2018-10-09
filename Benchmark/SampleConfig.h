@@ -79,3 +79,19 @@ typedef struct ExtVectAddProblemConfigType
 	size_t VectorSize;
 	float *h_a, *h_b, *h_c, *c_ref;
 }T_ExtVectAddProblemConfig;
+
+/************************************************************************/
+/* Reduction Add                                                           */
+/************************************************************************/
+typedef struct ExtReducAddSolutionConfigTpye
+{
+	int Methord;
+	int Tile,TileGroup;
+}T_ExtReducAddSolutionConfig;
+
+typedef struct ExtReducAddProblemConfigType
+{
+	size_t ReducSize, VectorSize;
+	size_t DataSize;
+	float *h_a, *h_b, *h_c, *c_ref;
+}T_ExtReducAddProblemConfig;
