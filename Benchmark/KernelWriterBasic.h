@@ -373,7 +373,7 @@ namespace krnelWriter
 		{
 			if ((name == "vcc") || (name == "vcc_hi") || (name == "vcc_lo") ||
 				(name == "exec") || (name == "exec_hi") || (name == "exec_lo") ||
-				(name == "off")||(name == "m0"))
+				(name == "off") || (name == "m0"))
 			{
 				return name;
 			}
@@ -384,15 +384,15 @@ namespace krnelWriter
 		}
 		std::string getVar(double immVal, int len = 1)
 		{
-			if((immVal - (int)immVal) != 0)
+			if ((immVal - (int)immVal) != 0)
 				return d2s((float)immVal);
 			else
 				return d2s((int)immVal);
 		}
 
 		E_VarType getVarType(Var * opter) { return opter->type; }
-		E_VarType getVarType(std::string name) 
-		{ 
+		E_VarType getVarType(std::string name)
+		{
 			if ((name == "vcc") || (name == "vcc_hi") || (name == "vcc_lo") ||
 				(name == "exec") || (name == "exec_hi") || (name == "exec_lo"))
 			{
@@ -403,7 +403,7 @@ namespace krnelWriter
 				return E_VarType::VAR_OFF;
 			}
 		}
-		E_VarType getVarType(double immVal) { return E_VarType::VAR_IMM;}
+		E_VarType getVarType(double immVal) { return E_VarType::VAR_IMM; }
 
 		int getVarVal(double immVal) { return immVal; }
 		int getVarVal(Var * reg)
@@ -438,7 +438,7 @@ namespace krnelWriter
 		{
 			tableCnt = tab;
 		}
-		
+
 		void wrString(std::string str)
 		{
 			std::string tmp = sblk();
@@ -457,7 +457,7 @@ namespace krnelWriter
 		{
 			KernelString.clear();
 		}
-		
+
 		void wrCommom1(std::string common)
 		{
 			KernelString.append("/************************************************************************************/\n");
@@ -475,6 +475,14 @@ namespace krnelWriter
 			KernelString.append("// ----------------------------------------------------------------------------------\n");
 			KernelString.append("// " + common + " \n");
 			KernelString.append("// ----------------------------------------------------------------------------------\n");
+		}
+
+		void wrLaber(Var*lab)
+		{
+			int saveTabCnt = tableCnt;
+			tableCnt = 0;
+			wrLine(getVar(lab) + ":");
+			tableCnt = saveTabCnt;
 		}
 
 		int log2(int value)
@@ -951,11 +959,11 @@ namespace krnelWriter
 		/* FLAT																				*/
 		/************************************************************************************/
 		template <typename T>
-		E_ReturnState flat_load_dword(int num, Var* v_dst, Var* v_offset, T s_addr, int i_offset = 0)
+		E_ReturnState flat_load_dword(int num, Var* v_dst, Var* v_offset, T s_addr, int i_offset = 0, bool glc = false)
 		{
 			if (IsaArch >= E_IsaArch::Gfx900)
 			{
-				return flat_load_dword_gfx900(num, v_dst, v_offset, s_addr, i_offset);
+				return flat_load_dword_gfx900(num, v_dst, v_offset, s_addr, i_offset, glc);
 			}
 			else
 			{
@@ -1031,7 +1039,7 @@ namespace krnelWriter
 			return E_ReturnState::SUCCESS;
 		}
 		template <typename T>
-		E_ReturnState flat_load_dword_gfx900(int num, Var* v_dst, Var* v_offset_addr, T s_addr, int i_offset = 0)
+		E_ReturnState flat_load_dword_gfx900(int num, Var* v_dst, Var* v_offset_addr, T s_addr, int i_offset = 0, bool glc = false)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -1077,13 +1085,18 @@ namespace krnelWriter
 			str.append(getVar(s_addr));
 
 			// imm_offset
+			tmpIdx = FLAG_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
 			if (i_offset != 0)
 			{
-				tmpIdx = FLAG_START_COL - str.length();
-				for (int i = 0; i < tmpIdx; i++)
-					str.append(" ");
 				str.append("offset:");
 				str.append(getVar(i_offset));
+			}
+			str.append(" ");
+			if (glc == true)
+			{
+				str.append("glc");
 			}
 
 			wrLine(str);
@@ -1311,11 +1324,11 @@ namespace krnelWriter
 		}
 
 		template <typename T>
-		E_ReturnState flat_atomic_op(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0)
+		E_ReturnState flat_atomic_op(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0,bool glc = false)
 		{
 			if (IsaArch >= E_IsaArch::Gfx900)
 			{
-				return flat_atomic_op_gfx900(op, v_dst, v_offset_addr, v_dat, s_addr, i_offset);
+				return flat_atomic_op_gfx900(op, v_dst, v_offset_addr, v_dat, s_addr, i_offset, glc);
 			}
 			else
 			{
@@ -1323,7 +1336,7 @@ namespace krnelWriter
 			}
 		}
 		template <typename T>
-		E_ReturnState flat_atomic_op_gfx900(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0)
+		E_ReturnState flat_atomic_op_gfx900(E_OpType op, Var* v_dst, Var* v_offset_addr, Var* v_dat, T s_addr, int i_offset = 0,bool glc = false)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -1408,13 +1421,18 @@ namespace krnelWriter
 			str.append(getVar(s_addr));
 			
 			// imm_offset
+			tmpIdx = FLAG_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
 			if (i_offset != 0)
 			{
-				tmpIdx = FLAG_START_COL - str.length();
-				for (int i = 0; i < tmpIdx; i++)
-					str.append(" ");
 				str.append("offset:");
 				str.append(getVar(i_offset));
+			}
+			if (glc == true)
+			{
+				str.append(" ");
+				str.append("glc");
 			}
 
 			wrLine(str);
@@ -1447,6 +1465,125 @@ namespace krnelWriter
 			if ((getVarType(s_addr) != E_VarType::VAR_SGPR) && (getVarType(s_addr) != E_VarType::VAR_OFF))
 			{
 				str.append("offset reg not sgpr nor off");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (!((i_offset >= -4096) && (i_offset <= 4095)))
+			{
+				str.append("imm_offset over 13-bit int");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+
+			return E_ReturnState::SUCCESS;
+		}
+		E_ReturnState flat_atomic_op_gfx800(E_OpType op, Var* v_dst, Var* v_addr, Var* v_dat, int i_offset = 0, bool glc = false)
+		{
+			int tmpIdx;
+			std::string str = "";
+
+			// op
+			str.append("flat_atomic_");
+			switch (op)
+			{
+			case OP_ADD:
+				str.append("add");
+				break;
+			case OP_INC:
+				str.append("inc");
+				break;
+			case OP_DEC:
+				str.append("dec");
+				break;
+			case OP_SUB:
+				str.append("sub");
+				break;
+			case OP_AND:
+				str.append("and");
+				break;
+			case OP_OR:
+				str.append("or");
+				break;
+			case OP_XOR:
+				str.append("xor");
+				break;
+			case OP_SMAX:
+				str.append("smax");
+				break;
+			case OP_UMAX:
+				str.append("umax");
+				break;
+			case OP_SMIN:
+				str.append("smin");
+				break;
+			case OP_UMIN:
+				str.append("umin");
+				break;
+			case OP_SWAP:
+				str.append("swap");
+				break;
+			case OP_CMPSWAP:
+				str.append("cmpswap");
+				break;
+			default:
+				str.append("invalid op");
+				return E_ReturnState::FAIL;
+			}
+
+			tmpIdx = PARAM_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+
+			// return data
+			str.append(getVar(v_dst));
+			str.append(", ");
+
+			// v_address
+			str.append(getVar(v_addr, 2));
+			str.append(", ");
+
+			// source data
+			str.append(getVar(v_dat));
+
+			// imm_offset
+			tmpIdx = FLAG_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+			if (i_offset != 0)
+			{
+				str.append("offset:");
+				str.append(getVar(i_offset));
+			}
+			if (glc == true)
+			{
+				str.append(" ");
+				str.append("glc");
+			}
+
+			wrLine(str);
+
+			// error check
+			if (v_addr->type != E_VarType::VAR_VGPR)
+			{
+				str.append("base addr reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_addr->vgpr.len != 2)
+			{
+				str.append("base addr reg not 64-bit for 64-bit addr mode");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_dst->type != E_VarType::VAR_VGPR)
+			{
+				str.append("store data reg not vgpr");
+				wrLine(str);
+				return E_ReturnState::FAIL;
+			}
+			if (v_dat->type != E_VarType::VAR_VGPR)
+			{
+				str.append("data reg not vgpr");
 				wrLine(str);
 				return E_ReturnState::FAIL;
 			}
@@ -1775,7 +1912,7 @@ namespace krnelWriter
 			wrLine(str);
 		}
 		template <typename T1, typename T2, typename T3, typename T4>
-		void op4(std::string op, T1 dst, T2 src0, T3 src1, T4 src2)
+		void op4(std::string op, T1 dst, T2 src0, T3 src1, T4 src2, bool glc = false)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -1792,6 +1929,14 @@ namespace krnelWriter
 			str.append(getVar(src1));
 			str.append(", ");
 			str.append(getVar(src2));
+
+			tmpIdx = FLAG_START_COL - str.length();
+			for (int i = 0; i < tmpIdx; i++)
+				str.append(" ");
+			if (glc == true)
+			{
+				str.append("glc");
+			}
 
 			wrLine(str);
 		}
@@ -1927,7 +2072,7 @@ namespace krnelWriter
 			bool cache_swizzle = false)
 		{
 			// desc0
-			op2("s_mov_b64", s_desc, s_base);
+			op2("s_mov_b64", *s_desc ^ 2, *s_base ^ 2);
 
 			// desc1
 			uint dsc1_tmp = stride & 0x3FFF;

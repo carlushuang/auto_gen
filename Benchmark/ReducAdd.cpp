@@ -14,8 +14,7 @@ E_ReturnState ReducAddSolution::GenerateSolutionConfigs()
 	T_ExtReducAddSolutionConfig * extSol;
 
 	extSol = new T_ExtReducAddSolutionConfig();
-	extSol->Methord = 2;
-	extSol->Tile = 10;
+	extSol->Methord = 3;
 	solutionConfig = new T_SolutionConfig("AutoGen");
 	solutionConfig->extConfig = extSol;
 	SolutionConfigList->push_back(solutionConfig);
@@ -72,7 +71,8 @@ E_ReturnState ReducAddSolution::GenerateSolution()
 	T_ExtReducAddProblemConfig * extProb = (T_ExtReducAddProblemConfig *)ProblemConfig->extConfig;
 	T_ExtReducAddSolutionConfig * extSol = (T_ExtReducAddSolutionConfig *)SolutionConfig->extConfig;
 
-	extSol->TileGroup = extProb->ReducSize / extSol->Tile;
+	extSol->TileGroup = 5;
+	extSol->Tile = extProb->ReducSize / extSol->TileGroup;
 
 	// ======================================================================
 	// Éú³Éworksize
@@ -82,7 +82,7 @@ E_ReturnState ReducAddSolution::GenerateSolution()
 		SolutionConfig->l_wk0 = WAVE_SIZE;
 		SolutionConfig->l_wk1 = 1;
 		SolutionConfig->l_wk2 = 1;
-		SolutionConfig->g_wk0 = CU_NUM * SolutionConfig->l_wk0;
+		SolutionConfig->g_wk0 = SolutionConfig->l_wk0;
 		SolutionConfig->g_wk1 = 1;
 		SolutionConfig->g_wk2 = 1;
 	}
@@ -91,8 +91,17 @@ E_ReturnState ReducAddSolution::GenerateSolution()
 		SolutionConfig->l_wk0 = WAVE_SIZE;
 		SolutionConfig->l_wk1 = extSol->TileGroup;
 		SolutionConfig->l_wk2 = 1;
-		SolutionConfig->g_wk0 = CU_NUM * SolutionConfig->l_wk0;
+		SolutionConfig->g_wk0 = SolutionConfig->l_wk0;
 		SolutionConfig->g_wk1 = extSol->TileGroup;
+		SolutionConfig->g_wk2 = 1;
+	}
+	else if (extSol->Methord == 3)
+	{
+		SolutionConfig->l_wk0 = WAVE_SIZE;
+		SolutionConfig->l_wk1 = 1;
+		SolutionConfig->l_wk2 = 1;
+		SolutionConfig->g_wk0 = SolutionConfig->l_wk0 * extSol->TileGroup;
+		SolutionConfig->g_wk1 = 1;
 		SolutionConfig->g_wk2 = 1;
 	}
 
@@ -127,7 +136,7 @@ E_ReturnState ReducAddProblem::GenerateProblemConfigs()
 	// ----------------------------------------------------------------------
 	// problem config 1
 	extProblemConfig = new T_ExtReducAddProblemConfig();
-	extProblemConfig->ReducSize = 10 * 5;
+	extProblemConfig->ReducSize = 1000 * 5;
 	extProblemConfig->VectorSize = 64;
 	extProblemConfig->DataSize = extProblemConfig->ReducSize * extProblemConfig->VectorSize;
 
