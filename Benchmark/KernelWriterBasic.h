@@ -506,7 +506,7 @@ namespace krnelWriter
 		/* SMEM																				*/
 		/************************************************************************************/
 		template <typename T>
-		E_ReturnState s_load_dword(int num, Var* s_dst, Var* s_base, T offset, bool glc = true)
+		E_ReturnState s_load_dword(int num, Var* s_dst, Var* s_base, T offset, bool glc = false)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -532,7 +532,7 @@ namespace krnelWriter
 			str.append(", ");
 			str.append(getVar(offset));
 
-			if (glc != true)
+			if (glc == true)
 			{
 				tmpIdx = FLAG_START_COL - str.length();
 				for (int i = 0; i < tmpIdx; i++)
@@ -570,7 +570,7 @@ namespace krnelWriter
 			return E_ReturnState::SUCCESS;
 		}
 		template <typename T>
-		E_ReturnState s_store_dword(int num, Var* s_dst, Var* s_base, T offset, bool glc = true)
+		E_ReturnState s_store_dword(int num, Var* s_dst, Var* s_base, T offset, bool glc = false)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -596,7 +596,7 @@ namespace krnelWriter
 			str.append(", ");
 			str.append(getVar(offset));
 
-			if (glc != true)
+			if (glc == true)
 			{
 				tmpIdx = FLAG_START_COL - str.length();
 				for (int i = 0; i < tmpIdx; i++)
@@ -634,7 +634,7 @@ namespace krnelWriter
 			return E_ReturnState::SUCCESS;
 		}
 		template <typename T>
-		E_ReturnState s_atomic_op(E_OpType op, Var* s_dat, Var* s_addr, T offset, bool glc = true)
+		E_ReturnState s_atomic_op(E_OpType op, Var* s_dat, Var* s_addr, T offset, bool glc = false)
 		{
 			int tmpIdx;
 			std::string str = "";
@@ -695,7 +695,7 @@ namespace krnelWriter
 			str.append(", ");
 			str.append(getVar(offset));
 
-			if (glc != true)
+			if (glc == true)
 			{
 				tmpIdx = FLAG_START_COL - str.length();
 				for (int i = 0; i < tmpIdx; i++)

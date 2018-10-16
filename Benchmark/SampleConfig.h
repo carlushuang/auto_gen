@@ -95,3 +95,18 @@ typedef struct ExtReducAddProblemConfigType
 	size_t DataSize;
 	float *h_a, *h_b, *h_c, *c_ref;
 }T_ExtReducAddProblemConfig;
+
+/************************************************************************/
+/* Producer-Consumer                                                    */
+/************************************************************************/
+typedef struct ExtProducerConsumerSolutionConfigTpye
+{
+}T_ExtProducerConsumerSolutionConfig;
+
+typedef struct ExtProducerConsumerProblemConfigType
+{
+	size_t VectorSize;
+	size_t SignalPerCU, SignalSize;
+	float *h_a, *h_b, *h_c, *c_ref;
+	float * h_sig;
+}T_ExtProducerConsumerProblemConfig;

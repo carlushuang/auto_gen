@@ -88,6 +88,12 @@
     <ClInclude Include="ReducAdd.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
+    <ClInclude Include="ProducerConsumerKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="ProducerConsumer.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -133,6 +139,12 @@
       <Filter>KernelWriter\Samples</Filter>
     </ClCompile>
     <ClCompile Include="ReducAdd.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ProducerConsumerKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ProducerConsumer.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>

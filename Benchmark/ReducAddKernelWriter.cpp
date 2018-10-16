@@ -163,6 +163,10 @@ void KernelWriterReducAdd::writeProgram()
 		op2("v_mov_b32", v_tmp1, v_rtn);
 		op1("s_cbranch_execnz", ATOMIC_ADD);
 	}
+	else if(extSolCfg->Methord == 4)
+	{
+
+	}
 
 	delVar(v_tmp1);
 }

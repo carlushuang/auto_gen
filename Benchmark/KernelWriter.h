@@ -85,8 +85,8 @@ namespace krnelWriter
 		Var * v_tid_y;
 		Var * v_tid_z;
 
-		Var * START_PROG;
-		Var * END_PROG;
+		Var * l_start_prog;
+		Var * l_end_prg;
 
 		/************************************************************************/
 		/* kernel文件生成函数                                                    */
@@ -112,7 +112,7 @@ namespace krnelWriter
 			writeCodeObj();
 			_writeProgram();
 		}
-		void writeMetadata()
+		virtual void writeMetadata()
 		{
 			setTable(0);
 			wrLine(".amd_amdgpu_hsa_metadata");
@@ -147,8 +147,8 @@ namespace krnelWriter
 			v_tid_x = newVgpr("v_tid_x");
 			v_tid_y = newVgpr("v_tid_y");
 
-			START_PROG = newLaber("START_PROG");
-			END_PROG = newLaber("END_PROG");
+			l_start_prog = newLaber("START_PROG");
+			l_end_prg = newLaber("END_PROG");
 		}
 		void writeCodeObj()
 		{
@@ -177,11 +177,11 @@ namespace krnelWriter
 		void _writeProgram()
 		{
 			setTable(0);
-			wrLine(getVar(START_PROG) + ":");
+			wrLine(getVar(l_start_prog) + ":");
 			indent();
 			writeProgram();
 			setTable(0);
-			wrLine(getVar(END_PROG) + ":");
+			wrLine(getVar(l_end_prg) + ":");
 			indent();
 			wrLine("s_endpgm\n");
 			clrVar();

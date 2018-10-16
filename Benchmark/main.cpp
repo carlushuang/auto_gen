@@ -15,6 +15,7 @@
 
 #include "VectorAdd.h"
 #include "ReducAdd.h"
+#include "ProducerConsumer.h"
 
 int main(int argc, char *argv[])
 {
@@ -47,8 +48,10 @@ int main(int argc, char *argv[])
 	// ----------------------------------------------------------------------
 	//ProblemCtrlBase *vAdd = new VectAddProblem("VectorAdd");
 	//vAdd->RunProblem();
-	ProblemCtrlBase *rdcAdd = new ReducAddProblem("ReducAdd");
-	rdcAdd->RunProblem();
+	//ProblemCtrlBase *rdcAdd = new ReducAddProblem("ReducAdd");
+	//rdcAdd->RunProblem();
+	ProblemCtrlBase *pc = new ProducerConsumerProblem("Producer-Consumer");
+	pc->RunProblem();
 		
 	// ======================================================================
 	// ======================================================================
