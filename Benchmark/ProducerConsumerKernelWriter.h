@@ -11,17 +11,14 @@ public:
 
 protected:
 	int N = 0;
+	int VectorSize;
 	T_ExtProducerConsumerProblemConfig * extProbCfg;	// 当前正在处理的问题扩展配置
 	T_ExtProducerConsumerSolutionConfig * extSolCfg;	// 当前正在处理的解决方案扩展配置
 
 	krnelWriter::Var * s_ptr_a;
 	krnelWriter::Var * s_ptr_c;
 	krnelWriter::Var * s_ptr_sig;
-
-	krnelWriter::Var * s_a_addr;
-	krnelWriter::Var * s_c_addr;
-	krnelWriter::Var * s_cu_sig_addr;
-
+	
 	void writeProgram(); 
 	
 	void writeMetadata()
@@ -44,4 +41,9 @@ protected:
 		wrLine(".end_amd_amdgpu_hsa_metadata");
 		wrLine("");
 	}
+
+	void test_func(krnelWriter::Var * s_signal_slot_addr,
+		krnelWriter::Var * l_begin_loop, krnelWriter::Var * l_end_loop,
+		uint wave_num_offset, uint signal_offset,
+		krnelWriter::Var * s_signal);
 };

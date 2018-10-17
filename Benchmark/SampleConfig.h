@@ -105,7 +105,7 @@ typedef struct ExtProducerConsumerSolutionConfigTpye
 
 typedef struct ExtProducerConsumerProblemConfigType
 {
-	size_t VectorSize;
+	size_t VectorSize, DataSize;
 	size_t SignalPerCU, SignalSize;
 	float *h_a, *h_b, *h_c, *c_ref;
 	float * h_sig;

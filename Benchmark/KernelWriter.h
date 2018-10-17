@@ -218,8 +218,7 @@ namespace krnelWriter
 			op3("s_add_u32", s_cu_id, s_tmp1, s_cu_id);
 
 			// 根据HW_CU_ID计算每个CU的信号槽首地址
-			op3("s_lshl_b32", s_tmp1, s_cu_id, log2(slot_size_per_cu));
-			op3("s_lshl_b32", s_tmp1, s_tmp1, 2);
+			op3("s_lshl_b32", s_tmp1, s_cu_id, log2(slot_size_per_cu) + 2);
 			op3("s_add_u32", s_signal_slot_addr, s_ptr_signal, s_tmp1);
 			op3("s_addc_u32", *s_signal_slot_addr + 1, *s_ptr_signal + 1, 0);
 
@@ -291,9 +290,10 @@ namespace krnelWriter
 			flat_store_dword(1, v_signal_addr, v_signal, "off", signal_offset * 4);
 			s_wait_vmcnt(0);
 		}
-		void f_start_pend_signal(Var * s_signal_slot_addr,
+		void f_s_pend_signal(Var * s_signal_slot_addr,
 			Var * l_begin_loop, Var * l_end_loop, 
-			uint wave_num_offset,uint signal_offset)
+			uint wave_num_offset,uint signal_offset,
+			Var * s_signal)
 		{
 			Var * v_tmp1 = newVgpr("v_tmp1");
 			Var * v_tmp2 = newVgpr("v_tmp2");
@@ -343,6 +343,7 @@ namespace krnelWriter
 			op2("v_readfirstlane_b32", s_old_fetch, v_fetch_idx_stack);	// 保存最老fetche的序号
 			
 			// 判断收到的预取序号是否已在序号堆栈中
+			op3("s_or_b32", s_fetched_data_flag, s_fetched_data_flag, 1);	// 躲避首次进入的0
 			op3("v_xor_b32", v_tmp1, s_fetched_data_flag, v_fetch_flag);
 			op3("v_and_b32", v_tmp1, v_tmp1, v_fetch_flag);
 			op3("v_cmpx_ne_u32", "vcc", v_tmp1, 0);						// 判断是否有新的需要fetche的标志位
@@ -359,6 +360,7 @@ namespace krnelWriter
 			// 对存在的所有fetch标志位更新
 			op2("s_bitset0_b32", s_fetched_data_flag, s_old_fetch);
 			op2("s_bitset1_b32", s_fetched_data_flag, s_new_fetch);
+			op2("s_mov_b32", s_signal, s_new_fetch);
 
 			// 已经fetch的下标的堆栈进行移位更新
 			op2("s_mov_b32", "exec_lo", s_exec_save);
@@ -379,7 +381,7 @@ namespace krnelWriter
 			delVar(s_new_fetch);
 			delVar(s_fetched_data_flag);
 		}
-		void f_end_pend_signal(Var * l_begin_loop, Var * l_end_loop)
+		void f_e_pend_signal(Var * l_begin_loop, Var * l_end_loop)
 		{
 			op1("s_branch", l_begin_loop);
 			wrLaber(l_end_loop);

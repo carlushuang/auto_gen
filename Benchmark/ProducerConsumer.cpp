@@ -28,8 +28,8 @@ E_ReturnState ProducerConsumerSolution::InitDev()
 {
 	T_ExtProducerConsumerProblemConfig * extProb = (T_ExtProducerConsumerProblemConfig *)ProblemConfig->extConfig;
 
-	DevMalloc((void**)&(d_a.ptr), extProb->VectorSize * sizeof(float));
-	DevMalloc((void**)&(d_c.ptr), extProb->VectorSize * sizeof(float));
+	DevMalloc((void**)&(d_a.ptr), extProb->DataSize * sizeof(float));
+	DevMalloc((void**)&(d_c.ptr), extProb->DataSize * sizeof(float));
 	DevMalloc((void**)&(d_sig.ptr), extProb->SignalSize * sizeof(float));
 
 	SolutionConfig->KernelArgus = new std::list<T_KernelArgu>;
@@ -37,7 +37,7 @@ E_ReturnState ProducerConsumerSolution::InitDev()
 	d_c.size = sizeof(cl_mem);	d_c.isVal = false;	SolutionConfig->KernelArgus->push_back(d_c);
 	d_sig.size = sizeof(cl_mem); d_sig.isVal = false;	SolutionConfig->KernelArgus->push_back(d_sig);
 
-	Copy2Dev((cl_mem)(d_a.ptr), extProb->h_a, extProb->VectorSize * sizeof(float));
+	Copy2Dev((cl_mem)(d_a.ptr), extProb->h_a, extProb->DataSize * sizeof(float));
 
 	return E_ReturnState::SUCCESS;
 }
@@ -48,7 +48,7 @@ E_ReturnState ProducerConsumerSolution::InitDev()
 E_ReturnState ProducerConsumerSolution::GetBackResult()
 {
 	T_ExtProducerConsumerProblemConfig * extProb = (T_ExtProducerConsumerProblemConfig *)ProblemConfig->extConfig;
-	Copy2Hst(extProb->h_c, (cl_mem)(d_c.ptr), extProb->VectorSize * sizeof(float));
+	Copy2Hst(extProb->h_c, (cl_mem)(d_c.ptr), extProb->DataSize * sizeof(float));
 	Copy2Hst(extProb->h_sig, (cl_mem)(d_sig.ptr), extProb->SignalSize * sizeof(float));
 }
 
@@ -76,8 +76,8 @@ E_ReturnState ProducerConsumerSolution::GenerateSolution()
 	SolutionConfig->l_wk0 = WAVE_SIZE;
 	SolutionConfig->l_wk1 = 1;
 	SolutionConfig->l_wk2 = 1;
-	int group_num = extProb->VectorSize / SolutionConfig->l_wk0;
-	SolutionConfig->g_wk0 = (group_num + 1) * 64 * SolutionConfig->l_wk0;
+	int group_num_per_cu = 4;
+	SolutionConfig->g_wk0 = (group_num_per_cu + 1) * 64 * SolutionConfig->l_wk0;
 	SolutionConfig->g_wk1 = 1;
 	SolutionConfig->g_wk2 = 1;
 
@@ -112,7 +112,8 @@ E_ReturnState ProducerConsumerProblem::GenerateProblemConfigs()
 	// ----------------------------------------------------------------------
 	// problem config 1
 	extProblemConfig = new T_ExtProducerConsumerProblemConfig();
-	extProblemConfig->VectorSize = 1024;
+	extProblemConfig->VectorSize = 512;
+	extProblemConfig->DataSize = extProblemConfig->VectorSize * CU_NUM;
 	extProblemConfig->SignalPerCU = 64;
 	extProblemConfig->SignalSize = extProblemConfig->SignalPerCU * CU_NUM;
 
@@ -136,17 +137,18 @@ E_ReturnState ProducerConsumerProblem::InitHost()
 	printf("Calculation = %.3f G\n", ProblemConfig->Calculation * 1e-9);
 	printf("TheoryElapsedTime = %.3f us \n", ProblemConfig->TheoryElapsedTime * 1e6);
 
-	extProb->h_a = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
-	extProb->h_b = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
-	extProb->h_c = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
+	extProb->h_a = (float*)HstMalloc(extProb->DataSize * sizeof(float));
+	extProb->h_c = (float*)HstMalloc(extProb->DataSize * sizeof(float));
+	extProb->c_ref = (float*)HstMalloc(extProb->DataSize * sizeof(float));
 	extProb->h_sig = (float*)HstMalloc(extProb->SignalSize * sizeof(float));
-	extProb->c_ref = (float*)HstMalloc(extProb->VectorSize * sizeof(float));
 		
-	for (int i = 0; i < extProb->VectorSize; i++)
+	for (int cu = 0; cu < CU_NUM; cu++)
 	{
-		extProb->h_a[i] = i;
-		extProb->h_b[i] = 2;
-		extProb->h_c[i] = 0;
+		for (int i = 0; i < extProb->VectorSize; i++)
+		{
+			extProb->h_a[cu*extProb->VectorSize + i] = i;
+			extProb->h_c[cu] = 0;
+		}
 	}
 	for (int i = 0; i < extProb->SignalSize; i++)
 	{
@@ -164,9 +166,14 @@ E_ReturnState ProducerConsumerProblem::Host()
 	printf("Vector Add host.\n");
 	T_ExtProducerConsumerProblemConfig * extProb = (T_ExtProducerConsumerProblemConfig *)ProblemConfig->extConfig;
 
-	for (int i = 0; i < extProb->VectorSize; i++)
+	for (int cu = 0; cu < CU_NUM; cu++)
 	{
-		extProb->c_ref[i] = extProb->h_a[i] + extProb->h_b[i];
+		float sum = 0;
+		for (int i = 0; i < extProb->VectorSize; i++)
+		{
+			sum += extProb->h_a[cu*extProb->VectorSize + i];
+		}
+		extProb->c_ref[cu] = sum;
 	}
 	return E_ReturnState::SUCCESS;
 }
@@ -180,7 +187,7 @@ E_ReturnState ProducerConsumerProblem::Verify()
 	T_ExtProducerConsumerProblemConfig * extProb = (T_ExtProducerConsumerProblemConfig *)ProblemConfig->extConfig;
 		
 	float diff = 0;
-	for (int i = 0; i < extProb->VectorSize; i++)
+	for (int i = 0; i < CU_NUM; i++)
 	{
 		diff += (extProb->c_ref[i] - extProb->h_c[i]) * (extProb->c_ref[i] - extProb->h_c[i]);
 	}
@@ -206,7 +213,6 @@ void ProducerConsumerProblem::ReleaseHost()
 	T_ExtProducerConsumerProblemConfig * extProb = (T_ExtProducerConsumerProblemConfig *)ProblemConfig->extConfig;
 
 	HstFree(extProb->h_a);
-	HstFree(extProb->h_b);
 	HstFree(extProb->h_c);
 	HstFree(extProb->h_sig);
 	HstFree(extProb->c_ref);
