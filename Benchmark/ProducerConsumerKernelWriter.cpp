@@ -103,7 +103,7 @@ void KernelWriterProducerConsumer::writeProgram()
 	wrLaber(l_fetch_loop);
 	op2("s_mov_b32", "exec_lo", s_exec_save);
 	op3("s_add_u32", s_loop_cnt2, s_loop_cnt2, 1);
-	//op1("s_sleep", 1);
+	op1("s_sleep", 10);
 
 	// 读取wave数(如果atomic不改变SQC,则需要到L2读取)(未完全测试)
 	s_load_dword(1, s_wave_num, s_cu_sig_addr, WAVE_NUM * 4);
@@ -149,7 +149,7 @@ void KernelWriterProducerConsumer::writeProgram()
 	// 准备退出prefetch 线程(存储测试计数器)
 	wrLaber(l_end_fetch);
 
-	op2("s_mov_b32", s_tmp1, 5555);
+	op2("s_mov_b32", s_tmp1, 55555555);
 	s_store_dword(1, s_tmp1, s_cu_sig_addr, (DEBUG_OFFSET + 0) * 4, true);
 	s_store_dword(1, s_old_fetch, s_cu_sig_addr, (DEBUG_OFFSET + 1) * 4, true);
 	s_store_dword(1, s_new_fetch, s_cu_sig_addr, (DEBUG_OFFSET + 2) * 4, true);
@@ -230,10 +230,10 @@ void KernelWriterProducerConsumer::writeProgram()
 		flat_store_dword(1, v_sig_addr, v_signal, "off", SIG_OFFSET * 4);
 		s_wait_vmcnt(0);
 
-//		for (int j = 0; j < 100; j++)
-//		{
-//			op2("v_mov_b32", v_sum, 123);
-//		}
+		for (int j = 0; j < 50; j++)
+		{
+			op2("v_mov_b32", v_sum, 123);
+		}
 //		s_load_dword(1, s_a, s_a_addr, 0);
 //		op3("s_add_u32", s_a_addr, s_a_addr, 4);
 //		op3("s_addc_u32", *s_a_addr + 1, *s_a_addr + 1, 0);
@@ -245,7 +245,7 @@ void KernelWriterProducerConsumer::writeProgram()
 //			op1("s_nop", 500);
 //		}
 //		op1("s_sleep", 1);
-		op1("s_sleep", 500);			// (!!!!!!!!!!!!!!!)
+		op1("s_sleep", 200);			// (!!!!!!!!!!!!!!!)
 	}
 	op2("v_readfirstlane_b32", s_sum, v_sum);
 	delVar(s_a);
