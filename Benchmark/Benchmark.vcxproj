@@ -72,13 +72,15 @@
   <ItemGroup>
     <ClInclude Include="BasicClass.h" />
     <ClInclude Include="helper_cl.h" />
+    <ClInclude Include="IsaGds.h" />
+    <ClInclude Include="IsaGdsKernelWriter.h" />
+    <ClInclude Include="IsaLds.h" />
+    <ClInclude Include="IsaLdsKernelWriter.h" />
     <ClInclude Include="ProducerConsumer.h" />
     <ClInclude Include="ProducerConsumerKernelWriter.h" />
     <ClInclude Include="ReducAdd.h" />
     <ClInclude Include="ReducAddKernelWriter.h" />
     <ClInclude Include="SampleConfig.h" />
-    <ClInclude Include="IsaDs.h" />
-    <ClInclude Include="IsaDsKernelWriter.h" />
     <ClInclude Include="IsaFlat.h" />
     <ClInclude Include="IsaFlatKernelWriter.h" />
     <ClInclude Include="IsaMubuf.h" />
@@ -103,10 +105,12 @@
     <ClInclude Include="VectorAddKernelWriter.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IsaDs.cpp" />
-    <ClCompile Include="IsaDsKernelWriter.cpp" />
     <ClCompile Include="IsaFlat.cpp" />
     <ClCompile Include="IsaFlatKernelWriter.cpp" />
+    <ClCompile Include="IsaGds.cpp" />
+    <ClCompile Include="IsaGdsKernelWriter.cpp" />
+    <ClCompile Include="IsaLds.cpp" />
+    <ClCompile Include="IsaLdsKernelWriter.cpp" />
     <ClCompile Include="IsaMubuf.cpp" />
     <ClCompile Include="IsaMubufKernelWriter.cpp" />
     <ClCompile Include="IsaSmem.cpp" />

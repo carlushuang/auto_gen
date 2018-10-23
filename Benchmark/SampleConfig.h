@@ -16,17 +16,30 @@ typedef struct ExtFlatProblemConfigType
 }T_ExtFlatProblemConfig;
 
 /************************************************************************/
-/* DS	                                                                */
+/* LDS	                                                                */
 /************************************************************************/
-typedef struct ExtDsSolutionConfigTpye
+typedef struct ExtLdsSolutionConfigTpye
 {
-}T_ExtDsSolutionConfig;
+}T_ExtLdsSolutionConfig;
 
-typedef struct ExtDsProblemConfigType
+typedef struct ExtLdsProblemConfigType
 {
 	size_t VectorSize;
 	float *h_a, *h_b, *h_c, *c_ref;
-}T_ExtDsProblemConfig;
+}T_ExtLdsProblemConfig;
+
+/************************************************************************/
+/* GDS	                                                                */
+/************************************************************************/
+typedef struct ExtGdsSolutionConfigTpye
+{
+}T_ExtGdsSolutionConfig;
+
+typedef struct ExtGdsProblemConfigType
+{
+	size_t VectorSize;
+	float *h_a, *h_b, *h_c, *c_ref;
+}T_ExtGdsProblemConfig;
 
 /************************************************************************/
 /* SMEM                                                                 */

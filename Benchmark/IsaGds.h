@@ -2,12 +2,12 @@
 
 #include "SampleConfig.h"
 #include "ProblemControl.h"
-#include "IsaDsKernelWriter.h"
+#include "IsaGdsKernelWriter.h"
 
 /************************************************************************/
 /* solution控制                                                          */
 /************************************************************************/
-class DsSolution : public SolutionCtrlBase
+class GdsSolution : public SolutionCtrlBase
 {
 private:
 	T_KernelArgu d_a, d_b, d_c;
@@ -42,12 +42,12 @@ public:
 /************************************************************************/
 /* 问题控制                                                             */
 /************************************************************************/
-class DsProblem : public ProblemCtrlBase
+class GdsProblem : public ProblemCtrlBase
 {
 public:
-	DsProblem(std::string name) :ProblemCtrlBase(name)
+	GdsProblem(std::string name) :ProblemCtrlBase(name)
 	{
-		Solution = new DsSolution();
+		Solution = new GdsSolution();
 	}
 
 public:

@@ -1,20 +1,20 @@
 
-#include "IsaDsKernelWriter.h"
+#include "IsaLdsKernelWriter.h"
 
 using namespace krnelWriter;
 
 #define DS_TEST		2
 
-KernelWriterIsaDs::KernelWriterIsaDs(T_ProblemConfig * probCfg, T_SolutionConfig * solCfg) :
+KernelWriterIsaLds::KernelWriterIsaLds(T_ProblemConfig * probCfg, T_SolutionConfig * solCfg) :
 	KernelWriter(probCfg, solCfg)
 {
-	extProbCfg = (T_ExtDsProblemConfig *)problemConfig->extConfig;
-	extSolCfg = (T_ExtDsSolutionConfig *)solutionConfig->extConfig;
+	extProbCfg = (T_ExtLdsProblemConfig *)problemConfig->extConfig;
+	extSolCfg = (T_ExtLdsSolutionConfig *)solutionConfig->extConfig;
 
 	N = extProbCfg->VectorSize;
 }
 
-void KernelWriterIsaDs::writeProgram()
+void KernelWriterIsaLds::writeProgram()
 {
 	s_ptr_a = newSgpr("s_ptr_a", 2, 2);
 	s_ptr_b = newSgpr("s_ptr_b", 2, 2);

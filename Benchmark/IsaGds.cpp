@@ -1,5 +1,5 @@
 
-#include "IsaDs.h"
+#include "IsaGds.h"
 
 /************************************************************************/
 /* solution控制                                                          */
@@ -8,12 +8,12 @@
 /************************************************************************/
 /* 根据problem参数成solution参数空间                                      */
 /************************************************************************/
-E_ReturnState DsSolution::GenerateSolutionConfigs()
+E_ReturnState GdsSolution::GenerateSolutionConfigs()
 {
 	T_SolutionConfig * solutionConfig;
-	T_ExtDsSolutionConfig * extSol;
+	T_ExtGdsSolutionConfig * extSol;
 
-	extSol = new T_ExtDsSolutionConfig();
+	extSol = new T_ExtGdsSolutionConfig();
 	solutionConfig = new T_SolutionConfig("AutoGen");
 	solutionConfig->extConfig = extSol;
 	SolutionConfigList->push_back(solutionConfig);
@@ -24,9 +24,9 @@ E_ReturnState DsSolution::GenerateSolutionConfigs()
 /************************************************************************/
 /* 申请显存                                                            */
 /************************************************************************/
-E_ReturnState DsSolution::InitDev()
+E_ReturnState GdsSolution::InitDev()
 {
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
 
 	DevMalloc((void**)&(d_a.ptr), extProb->VectorSize * sizeof(float));
 	DevMalloc((void**)&(d_b.ptr), extProb->VectorSize * sizeof(float));
@@ -46,16 +46,16 @@ E_ReturnState DsSolution::InitDev()
 /************************************************************************/
 /* 返回结果                                                            */
 /************************************************************************/
-E_ReturnState DsSolution::GetBackResult()
+E_ReturnState GdsSolution::GetBackResult()
 {
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
 	Copy2Hst(extProb->h_c, (cl_mem)(d_c.ptr), extProb->VectorSize * sizeof(float));
 }
 
 /************************************************************************/
 /* 释放显存	                                                           */
 /************************************************************************/
-void DsSolution::ReleaseDev()
+void GdsSolution::ReleaseDev()
 {
 	DevFree((cl_mem)(d_a.ptr));
 	DevFree((cl_mem)(d_b.ptr));
@@ -65,10 +65,10 @@ void DsSolution::ReleaseDev()
 /************************************************************************/
 /* 根据solution参数生成source, complier和worksize                         */
 /************************************************************************/
-E_ReturnState DsSolution::GenerateSolution()
+E_ReturnState GdsSolution::GenerateSolution()
 {
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
-	T_ExtDsSolutionConfig * extSol = (T_ExtDsSolutionConfig *)SolutionConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsSolutionConfig * extSol = (T_ExtGdsSolutionConfig *)SolutionConfig->extConfig;
 
 	// ======================================================================
 	// 生成worksize
@@ -83,11 +83,11 @@ E_ReturnState DsSolution::GenerateSolution()
 	// ======================================================================
 	// 生成代码
 	// ======================================================================
-	SolutionConfig->KernelName = "IsaDs";
-	SolutionConfig->KernelFile = "IsaDsAutoGen.s";
+	SolutionConfig->KernelName = "IsaGds";
+	SolutionConfig->KernelFile = "IsaGdsAutoGen.s";
 	SolutionConfig->KernelSrcType = E_KernleType::KERNEL_TYPE_GAS_FILE;
 
-	KernelWriterIsaDs * kw = new KernelWriterIsaDs(ProblemConfig, SolutionConfig);
+	KernelWriterIsaGds * kw = new KernelWriterIsaGds(ProblemConfig, SolutionConfig);
 	kw->GenKernelString();
 	kw->PrintKernelString();
 	kw->SaveKernelString2File();
@@ -103,18 +103,18 @@ E_ReturnState DsSolution::GenerateSolution()
 /************************************************************************/
 /* 生成问题空间													        */
 /************************************************************************/
-E_ReturnState DsProblem::GenerateProblemConfigs()
+E_ReturnState GdsProblem::GenerateProblemConfigs()
 {
 	T_ProblemConfig * problemConfig;
-	T_ExtDsProblemConfig * extProblemConfig;
+	T_ExtGdsProblemConfig * extProblemConfig;
 
 	// ----------------------------------------------------------------------
 	// problem config 1
-	extProblemConfig = new T_ExtDsProblemConfig();
-	extProblemConfig->VectorSize = 1024;
+	extProblemConfig = new T_ExtGdsProblemConfig();
+	extProblemConfig->VectorSize = 64*64;
 
 	problemConfig = new T_ProblemConfig();
-	problemConfig->ConfigName = "512";
+	problemConfig->ConfigName = "64*64";
 	problemConfig->extConfig = extProblemConfig;
 
 	ProblemConfigList->push_back(problemConfig);
@@ -123,10 +123,10 @@ E_ReturnState DsProblem::GenerateProblemConfigs()
 /************************************************************************/
 /* 参数初始化                                                            */
 /************************************************************************/
-E_ReturnState DsProblem::InitHost()
+E_ReturnState GdsProblem::InitHost()
 {
 	std::cout << "Ds Instruction init" << ProblemConfig->ConfigName << std::endl;
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
 
 	ProblemConfig->Calculation = extProb->VectorSize; 
 	ProblemConfig->TheoryElapsedTime = ProblemConfig->Calculation / RuntimeCtrlBase::DeviceInfo.Fp32Flops;
@@ -151,10 +151,10 @@ E_ReturnState DsProblem::InitHost()
 /************************************************************************/
 /* HOST端                                                               */
 /************************************************************************/
-E_ReturnState DsProblem::Host()
+E_ReturnState GdsProblem::Host()
 {
 	printf("Ds instruction host.\n");
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
 
 	for (int i = 0; i < extProb->VectorSize; i++)
 	{
@@ -166,10 +166,10 @@ E_ReturnState DsProblem::Host()
 /************************************************************************/
 /* 校验                                                                 */
 /************************************************************************/
-E_ReturnState DsProblem::Verify()
+E_ReturnState GdsProblem::Verify()
 {
 	printf("Ds instruction verify.\n");
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
 		
 	float diff = 0;
 	for (int i = 0; i < extProb->VectorSize; i++)
@@ -192,10 +192,10 @@ E_ReturnState DsProblem::Verify()
 /************************************************************************/
 /* 释放                                                                  */
 /************************************************************************/
-void DsProblem::ReleaseHost()
+void GdsProblem::ReleaseHost()
 {
 	printf("Ds instruction destroy.\n");
-	T_ExtDsProblemConfig * extProb = (T_ExtDsProblemConfig *)ProblemConfig->extConfig;
+	T_ExtGdsProblemConfig * extProb = (T_ExtGdsProblemConfig *)ProblemConfig->extConfig;
 
 	HstFree(extProb->h_a);
 	HstFree(extProb->h_b);

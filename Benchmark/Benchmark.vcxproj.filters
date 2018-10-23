@@ -49,12 +49,6 @@
     <ClInclude Include="helper_cl.h">
       <Filter>Includes</Filter>
     </ClInclude>
-    <ClInclude Include="IsaDs.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaDsKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
     <ClInclude Include="IsaFlatKernelWriter.h">
       <Filter>KernelWriter\Samples\Includes</Filter>
     </ClInclude>
@@ -94,6 +88,18 @@
     <ClInclude Include="ProducerConsumer.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
+    <ClInclude Include="IsaLds.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaLdsKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaGdsKernelWriter.h">
+      <Filter>KernelWriter\Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaGds.h">
+      <Filter>Samples\Includes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -105,16 +111,10 @@
       <Filter>Samples</Filter>
     </ClCompile>
     <ClCompile Include="ProblemControl.cpp" />
-    <ClCompile Include="IsaDs.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
     <ClCompile Include="IsaSmemKernelWriter.cpp">
       <Filter>KernelWriter\Samples</Filter>
     </ClCompile>
     <ClCompile Include="IsaFlatKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaDsKernelWriter.cpp">
       <Filter>KernelWriter\Samples</Filter>
     </ClCompile>
     <ClCompile Include="IsaMubuf.cpp">
@@ -145,6 +145,18 @@
       <Filter>KernelWriter\Samples</Filter>
     </ClCompile>
     <ClCompile Include="ProducerConsumer.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaLds.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaLdsKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaGdsKernelWriter.cpp">
+      <Filter>KernelWriter\Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="IsaGds.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>

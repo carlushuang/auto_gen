@@ -150,7 +150,7 @@ namespace krnelWriter
 			l_start_prog = newLaber("START_PROG");
 			l_end_prg = newLaber("END_PROG");
 		}
-		void writeCodeObj()
+		virtual void writeCodeObj()
 		{
 			setTable(1);
 			wrLine(".amd_kernel_code_t");

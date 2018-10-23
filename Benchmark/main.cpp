@@ -7,7 +7,8 @@
 #include "ProblemControl.h"
 
 
-#include "IsaDs.h"
+#include "IsaLds.h"
+#include "IsaGds.h"
 #include "IsaFlat.h"
 #include "IsaMubuf.h"
 #include "IsaSmem.h"
@@ -32,8 +33,10 @@ int main(int argc, char *argv[])
 	// ----------------------------------------------------------------------
 	// ISA 示例
 	// ----------------------------------------------------------------------
-	//ProblemCtrlBase *ds = new DsProblem("ds instruction demo");
-	//ds->RunProblem();
+	ProblemCtrlBase * lds = new LdsProblem("lds instruction demo");
+	lds->RunProblem();
+	//ProblemCtrlBase *gds = new GdsProblem("gds instruction demo");
+	//gds->RunProblem();
 	//ProblemCtrlBase *flat = new FlatProblem("flat instruction demo");
 	//flat->RunProblem();
 	//ProblemCtrlBase *mubuf = new MubufProblem("mubuf instruction demo");
@@ -50,8 +53,8 @@ int main(int argc, char *argv[])
 	//vAdd->RunProblem();
 	//ProblemCtrlBase *rdcAdd = new ReducAddProblem("ReducAdd");
 	//rdcAdd->RunProblem();
-	ProblemCtrlBase *pc = new ProducerConsumerProblem("Producer-Consumer");
-	pc->RunProblem();
+	//ProblemCtrlBase *pc = new ProducerConsumerProblem("Producer-Consumer");
+	//pc->RunProblem();
 		
 	// ======================================================================
 	// ======================================================================
