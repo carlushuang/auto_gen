@@ -70,25 +70,26 @@
     <RemoteProjectDir>$(RemoteRootDir)/$(ProjectName)/</RemoteProjectDir>
   </PropertyGroup>
   <ItemGroup>
+    <ClInclude Include="AutoTuning.h" />
     <ClInclude Include="BasicClass.h" />
     <ClInclude Include="helper_cl.h" />
+    <ClInclude Include="IsaFlatKernelWriter.h" />
     <ClInclude Include="IsaGds.h" />
     <ClInclude Include="IsaGdsKernelWriter.h" />
     <ClInclude Include="IsaLds.h" />
     <ClInclude Include="IsaLdsKernelWriter.h" />
+    <ClInclude Include="IsaMubufKernelWriter.h" />
+    <ClInclude Include="IsaSmemKernelWriter.h" />
+    <ClInclude Include="IsaSopKernelWriter.h" />
     <ClInclude Include="ProducerConsumer.h" />
     <ClInclude Include="ProducerConsumerKernelWriter.h" />
     <ClInclude Include="ReducAdd.h" />
     <ClInclude Include="ReducAddKernelWriter.h" />
     <ClInclude Include="SampleConfig.h" />
     <ClInclude Include="IsaFlat.h" />
-    <ClInclude Include="IsaFlatKernelWriter.h" />
     <ClInclude Include="IsaMubuf.h" />
-    <ClInclude Include="IsaMubufKernelWriter.h" />
     <ClInclude Include="IsaSmem.h" />
-    <ClInclude Include="IsaSmemKernelWriter.h" />
     <ClInclude Include="IsaSop.h" />
-    <ClInclude Include="IsaSopKernelWriter.h" />
     <ClInclude Include="KernelWriter.h" />
     <ClInclude Include="KernelWriterBasic.h" />
     <ClInclude Include="ProblemControl.h" />
@@ -106,26 +107,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IsaFlat.cpp" />
-    <ClCompile Include="IsaFlatKernelWriter.cpp" />
     <ClCompile Include="IsaGds.cpp" />
-    <ClCompile Include="IsaGdsKernelWriter.cpp" />
     <ClCompile Include="IsaLds.cpp" />
-    <ClCompile Include="IsaLdsKernelWriter.cpp" />
     <ClCompile Include="IsaMubuf.cpp" />
-    <ClCompile Include="IsaMubufKernelWriter.cpp" />
     <ClCompile Include="IsaSmem.cpp" />
-    <ClCompile Include="IsaSmemKernelWriter.cpp" />
     <ClCompile Include="IsaSop.cpp" />
-    <ClCompile Include="IsaSopKernelWriter.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />
     <ClCompile Include="ProducerConsumer.cpp" />
-    <ClCompile Include="ProducerConsumerKernelWriter.cpp" />
     <ClCompile Include="ReducAdd.cpp" />
-    <ClCompile Include="ReducAddKernelWriter.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
     <ClCompile Include="VectorAdd.cpp" />
-    <ClCompile Include="VectorAddKernelWriter.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

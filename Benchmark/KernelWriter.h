@@ -10,13 +10,18 @@
 
 #include <sys/stat.h>
 
-namespace krnelWriter
+namespace AutoGen
 {
 	class KernelWriter : public KernelWriterBasic
 	{
 	public:
 		KernelWriter(T_ProblemConfig * probCfg, T_SolutionConfig * solCfg)
+#ifdef ISA_GFX800
+			: KernelWriterBasic(E_IsaArch::Gfx800)
+#endif
+#ifdef ISA_GFX900
 			: KernelWriterBasic(E_IsaArch::Gfx900)
+#endif
 		{
 			problemConfig = probCfg;
 			solutionConfig = solCfg;
@@ -42,7 +47,7 @@ namespace krnelWriter
 		void SaveKernelString2File()
 		{
 			std::string kernelPath = "../../../Kernels/";
-			
+
 			if (access(kernelPath.c_str(), F_OK) == -1)
 			{
 				::mkdir(kernelPath.c_str(), 0777);
@@ -95,7 +100,14 @@ namespace krnelWriter
 		{
 			setTable(0);
 			wrLine(".hsa_code_object_version 2, 1");
-			wrLine(".hsa_code_object_isa 9, 0, 0, \"AMD\", \"AMDGPU\"");
+			if (IsaArch == E_IsaArch::Gfx900)
+			{
+				wrLine(".hsa_code_object_isa 9, 0, 0, \"AMD\", \"AMDGPU\"");
+			}
+			else if (IsaArch == E_IsaArch::Gfx800)
+			{
+				wrLine(".hsa_code_object_isa 8, 0, 3, \"AMD\", \"AMDGPU\"");
+			}
 			wrLine("");
 			wrLine(".text");
 			wrLine(".globl " + kernelName);
@@ -112,6 +124,7 @@ namespace krnelWriter
 			writeCodeObj();
 			_writeProgram();
 		}
+		// 需要根据arg列表自动生成,暂时写成固定的
 		virtual void writeMetadata()
 		{
 			setTable(0);
@@ -138,7 +151,7 @@ namespace krnelWriter
 		/************************************************************************/
 		void initialDefaultGprs()
 		{
-			s_privateSeg = newSgpr("s_privateSeg", 4);
+			//s_privateSeg = newSgpr("s_privateSeg", 4);
 			s_kernelArg = newSgpr("s_kernelArg", 2);
 			s_gid_x = newSgpr("s_gid_x");
 			s_gid_y = newSgpr("s_gid_y");
@@ -150,25 +163,27 @@ namespace krnelWriter
 			l_start_prog = newLaber("START_PROG");
 			l_end_prg = newLaber("END_PROG");
 		}
-		virtual void writeCodeObj()
+		void writeCodeObj()
 		{
 			setTable(1);
 			wrLine(".amd_kernel_code_t");
 			indent();
-			wrLine("enable_sgpr_private_segment_buffer = 1");
+			//wrLine("enable_sgpr_private_segment_buffer = 1");
 			wrLine("enable_sgpr_kernarg_segment_ptr = 1");
 			wrLine("enable_sgpr_workgroup_id_x = 1");
 			wrLine("enable_sgpr_workgroup_id_y = 1");
 			wrLine("enable_sgpr_workgroup_id_z = 1");
 			wrLine("enable_vgpr_workitem_id = 2");
 			wrLine("is_ptr64 = 1");
-			wrLine("float_mode = 240");
-			wrLine("granulated_wavefront_sgpr_count = " + d2s((sgprCountMax - 1) / 4));
+			//wrLine("float_mode = 240");
+			wrLine("float_mode = 192");
+			wrLine("granulated_wavefront_sgpr_count = " + d2s((sgprCountMax + 6 - 1) / 8));	// 使用(sgpr/16 - 1)会挂掉,不懂为啥???
 			wrLine("granulated_workitem_vgpr_count = " + d2s((vgprCountMax - 1) / 4));
-			wrLine("user_sgpr_count = 6");
-			wrLine("wavefront_sgpr_count = " + d2s(sgprCountMax));
+			//wrLine("user_sgpr_count = 6");	// private * 4 + kernel_arg * 2
+			wrLine("user_sgpr_count = 2");
+			wrLine("wavefront_sgpr_count = " + d2s(sgprCountMax + 6));
 			wrLine("workitem_vgpr_count = " + d2s(vgprCountMax));
-			wrLine("kernarg_segment_byte_size = 56");
+			wrLine("kernarg_segment_byte_size = 24");
 			wrLine("workgroup_group_segment_byte_size = " + d2s(ldsByteCount));
 			backSpace();
 			wrLine(".end_amd_kernel_code_t");
@@ -260,7 +275,7 @@ namespace krnelWriter
 			op2("v_mov_b32", v_tmp1, *s_signal_slot_addr + 1);
 			op4("v_add_co_u32", v_signal_addr, "vcc", s_signal_slot_addr, v_tmp2);
 			op5("v_addc_co_u32", *v_signal_addr + 1, "vcc", 0, v_tmp1, "vcc");
-			
+
 			// 初始化信号(不需要写入L2). 是否需要只一个thread操作???????????
 			op2("v_mov_b32", v_tmp1, 0);
 			flat_store_dword(1, v_signal_addr, v_tmp1, "off", signal_offset * 4);
@@ -291,8 +306,8 @@ namespace krnelWriter
 			s_wait_vmcnt(0);
 		}
 		void f_s_pend_signal(Var * s_signal_slot_addr,
-			Var * l_begin_loop, Var * l_end_loop, 
-			uint wave_num_offset,uint signal_offset,
+			Var * l_begin_loop, Var * l_end_loop,
+			uint wave_num_offset, uint signal_offset,
 			Var * s_signal)
 		{
 			Var * v_tmp1 = newVgpr("v_tmp1");
@@ -341,7 +356,7 @@ namespace krnelWriter
 			op3("v_lshlrev_b32", v_fetch_flag, v_signal, 1);			// 将序号转换为位标志位
 			op2("s_mov_b32", s_exec_save, "exec_lo");					// 保存exec
 			op2("v_readfirstlane_b32", s_old_fetch, v_fetch_idx_stack);	// 保存最老fetche的序号
-			
+
 			// 判断收到的预取序号是否已在序号堆栈中
 			op3("s_or_b32", s_fetched_data_flag, s_fetched_data_flag, 1);	// 躲避首次进入的0
 			op3("v_xor_b32", v_tmp1, s_fetched_data_flag, v_fetch_flag);
@@ -353,7 +368,7 @@ namespace krnelWriter
 			op1("s_cbranch_scc1", l_begin_loop);
 
 			op2("v_readfirstlane_b32", s_new_fetch, v_signal);			// 获得需要fetch的第一个序号
-			
+
 			// 此处已经获得的需要fetch的下标，可以在此进行fetch
 			// 但为保证程序简洁，仍将真正的fetch工作放在最后
 

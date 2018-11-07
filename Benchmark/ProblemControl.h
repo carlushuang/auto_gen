@@ -4,6 +4,7 @@
 #include <vector>
 #include "BasicClass.h"
 #include "RuntimeControl.h"
+#include "AutoTuning.h"
 
 #include "unistd.h"
 

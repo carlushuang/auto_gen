@@ -34,12 +34,6 @@
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKUtil.hpp">
       <Filter>Includes\utils\amdcl2</Filter>
     </ClInclude>
-    <ClInclude Include="KernelWriter.h">
-      <Filter>KernelWriter</Filter>
-    </ClInclude>
-    <ClInclude Include="KernelWriterBasic.h">
-      <Filter>KernelWriter</Filter>
-    </ClInclude>
     <ClInclude Include="IsaFlat.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
@@ -49,41 +43,20 @@
     <ClInclude Include="helper_cl.h">
       <Filter>Includes</Filter>
     </ClInclude>
-    <ClInclude Include="IsaFlatKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaSmemKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
     <ClInclude Include="IsaMubuf.h">
       <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaMubufKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
     </ClInclude>
     <ClInclude Include="IsaSop.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
-    <ClInclude Include="IsaSopKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
     <ClInclude Include="SampleConfig.h">
       <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="VectorAddKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
     </ClInclude>
     <ClInclude Include="VectorAdd.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
-    <ClInclude Include="ReducAddKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
     <ClInclude Include="ReducAdd.h">
       <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="ProducerConsumerKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
     </ClInclude>
     <ClInclude Include="ProducerConsumer.h">
       <Filter>Samples\Includes</Filter>
@@ -91,72 +64,75 @@
     <ClInclude Include="IsaLds.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
-    <ClInclude Include="IsaLdsKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaGdsKernelWriter.h">
-      <Filter>KernelWriter\Samples\Includes</Filter>
-    </ClInclude>
     <ClInclude Include="IsaGds.h">
       <Filter>Samples\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="KernelWriterBasic.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="KernelWriter.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoTuning.h">
+      <Filter>Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaFlatKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaGdsKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorAddKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaLdsKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaMubufKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaSmemKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="IsaSopKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="ReducAddKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
+    </ClInclude>
+    <ClInclude Include="ProducerConsumerKernelWriter.h">
+      <Filter>Samples\KernelWriter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
-    <ClCompile Include="IsaFlat.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaSmem.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
     <ClCompile Include="ProblemControl.cpp" />
-    <ClCompile Include="IsaSmemKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaFlatKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaMubuf.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaMubufKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaSop.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaSopKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="VectorAddKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
     <ClCompile Include="VectorAdd.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
-    <ClCompile Include="ReducAddKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="ReducAdd.cpp">
+    <ClCompile Include="IsaFlat.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
-    <ClCompile Include="ProducerConsumerKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="ProducerConsumer.cpp">
+    <ClCompile Include="IsaGds.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
     <ClCompile Include="IsaLds.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
-    <ClCompile Include="IsaLdsKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
+    <ClCompile Include="IsaMubuf.cpp">
+      <Filter>Samples</Filter>
     </ClCompile>
-    <ClCompile Include="IsaGdsKernelWriter.cpp">
-      <Filter>KernelWriter\Samples</Filter>
+    <ClCompile Include="IsaSmem.cpp">
+      <Filter>Samples</Filter>
     </ClCompile>
-    <ClCompile Include="IsaGds.cpp">
+    <ClCompile Include="IsaSop.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ReducAdd.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="ProducerConsumer.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
   </ItemGroup>
@@ -170,20 +146,14 @@
     <Filter Include="Includes\utils\amdcl2">
       <UniqueIdentifier>{dd00e094-454f-48db-b608-0b85689807b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="KernelWriter">
-      <UniqueIdentifier>{5010a587-ea4b-4946-9487-e37813c24f87}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Samples">
       <UniqueIdentifier>{b317f902-cc3f-4e96-aed3-cba511c680f8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Samples\Includes">
       <UniqueIdentifier>{26985fd0-6812-4e02-8f0d-69df35a966a4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="KernelWriter\Samples">
-      <UniqueIdentifier>{2bd99694-3d03-45dd-a055-02a8f5ac444f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="KernelWriter\Samples\Includes">
-      <UniqueIdentifier>{b898ea81-4d87-4feb-956a-14a2d35a0bb5}</UniqueIdentifier>
+    <Filter Include="Samples\KernelWriter">
+      <UniqueIdentifier>{4b6212e5-44ca-400e-ab19-9bdf56302739}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
