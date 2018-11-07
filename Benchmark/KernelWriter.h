@@ -1,7 +1,7 @@
 /************************************************************************/
-/* ÕâÀï¶¨ÒåµÄÊÇÒÀÀµÓÚÎÊÌâÅäÖÃµÄÏà¹ØÉú³ÉkernelµÄº¯Êı							*/
-/* ±ÈÈçgroup size£¬´«Èë²ÎÊıÁĞ±íµÈµÈ										*/
-/* Òò´ËÖ»ĞèÒªinclude ProblemControl.h									*/
+/* è¿™é‡Œå®šä¹‰çš„æ˜¯ä¾èµ–äºé—®é¢˜é…ç½®çš„ç›¸å…³ç”Ÿæˆkernelçš„å‡½æ•°							*/
+/* æ¯”å¦‚group sizeï¼Œä¼ å…¥å‚æ•°åˆ—è¡¨ç­‰ç­‰										*/
+/* å› æ­¤åªéœ€è¦include ProblemControl.h									*/
 /************************************************************************/
 #pragma once
 
@@ -46,7 +46,7 @@ namespace AutoGen
 		}
 		void SaveKernelString2File()
 		{
-			std::string kernelPath = "../../../Kernels/";
+			std::string kernelPath = getKernelDirectory();
 
 			if (access(kernelPath.c_str(), F_OK) == -1)
 			{
@@ -94,7 +94,7 @@ namespace AutoGen
 		Var * l_end_prg;
 
 		/************************************************************************/
-		/* kernelÎÄ¼şÉú³Éº¯Êı                                                    */
+		/* kernelæ–‡ä»¶ç”Ÿæˆå‡½æ•°                                                    */
 		/************************************************************************/
 		void writeSignature()
 		{
@@ -124,7 +124,7 @@ namespace AutoGen
 			writeCodeObj();
 			_writeProgram();
 		}
-		// ĞèÒª¸ù¾İargÁĞ±í×Ô¶¯Éú³É,ÔİÊ±Ğ´³É¹Ì¶¨µÄ
+		// éœ€è¦æ ¹æ®argåˆ—è¡¨è‡ªåŠ¨ç”Ÿæˆ,æš‚æ—¶å†™æˆå›ºå®šçš„
 		virtual void writeMetadata()
 		{
 			setTable(0);
@@ -147,7 +147,7 @@ namespace AutoGen
 		}
 
 		/************************************************************************/
-		/* kernel º¯ÊıÄÚÈİÉú³Éº¯Êı                                                */
+		/* kernel å‡½æ•°å†…å®¹ç”Ÿæˆå‡½æ•°                                                */
 		/************************************************************************/
 		void initialDefaultGprs()
 		{
@@ -177,7 +177,7 @@ namespace AutoGen
 			wrLine("is_ptr64 = 1");
 			//wrLine("float_mode = 240");
 			wrLine("float_mode = 192");
-			wrLine("granulated_wavefront_sgpr_count = " + d2s((sgprCountMax + 6 - 1) / 8));	// Ê¹ÓÃ(sgpr/16 - 1)»á¹Òµô,²»¶®ÎªÉ¶???
+			wrLine("granulated_wavefront_sgpr_count = " + d2s((sgprCountMax + 6 - 1) / 8));	// ä½¿ç”¨(sgpr/16 - 1)ä¼šæŒ‚æ‰,ä¸æ‡‚ä¸ºå•¥???
 			wrLine("granulated_workitem_vgpr_count = " + d2s((vgprCountMax - 1) / 4));
 			//wrLine("user_sgpr_count = 6");	// private * 4 + kernel_arg * 2
 			wrLine("user_sgpr_count = 2");
@@ -204,7 +204,7 @@ namespace AutoGen
 		virtual void writeProgram() = 0;
 
 		/************************************************************************/
-		/* ³£ÓÃkernelº¯Êı														 */
+		/* å¸¸ç”¨kernelå‡½æ•°														 */
 		/************************************************************************/
 		void f_linear_addr(Var * s_base_addr, Var * v_addr)
 		{
@@ -224,7 +224,7 @@ namespace AutoGen
 
 		void f_signal_slot_addr(Var * s_signal_slot_addr, Var * s_ptr_signal, uint slot_size_per_cu)
 		{
-			// ¶ÁÈ¡Ó²¼şID
+			// è¯»å–ç¡¬ä»¶ID
 			Var * s_tmp1 = newSgpr("s_tmp1");
 			Var * s_cu_id = newSgpr("s_cu_id");
 			Var * s_se_id = newSgpr("s_se_id");
@@ -232,7 +232,7 @@ namespace AutoGen
 			op3("s_lshl_b32", s_tmp1, s_se_id, log2(CU_PER_SE));
 			op3("s_add_u32", s_cu_id, s_tmp1, s_cu_id);
 
-			// ¸ù¾İHW_CU_ID¼ÆËãÃ¿¸öCUµÄĞÅºÅ²ÛÊ×µØÖ·
+			// æ ¹æ®HW_CU_IDè®¡ç®—æ¯ä¸ªCUçš„ä¿¡å·æ§½é¦–åœ°å€
 			op3("s_lshl_b32", s_tmp1, s_cu_id, log2(slot_size_per_cu) + 2);
 			op3("s_add_u32", s_signal_slot_addr, s_ptr_signal, s_tmp1);
 			op3("s_addc_u32", *s_signal_slot_addr + 1, *s_ptr_signal + 1, 0);
@@ -250,7 +250,7 @@ namespace AutoGen
 			Var * s_sig_idx = newSgpr("s_sig_idx");
 			Var * l_end_init = newLaber("END_INIT");
 
-			// Ê¹ÓÃWAVE0×ö³õÊ¼»¯(¾¡Á¿ÌáÇ°×ö)(ĞèÒªĞ´ÈëL2ÒÔ×÷Îªatomic²Ù×÷)
+			// ä½¿ç”¨WAVE0åšåˆå§‹åŒ–(å°½é‡æå‰åš)(éœ€è¦å†™å…¥L2ä»¥ä½œä¸ºatomicæ“ä½œ)
 			op3("s_lshr_b32", s_wave_id, s_gid_x, log2(CU_NUM));
 			op2("s_cmp_eq_u32", s_wave_id, 0);
 			op1("s_cbranch_scc0", l_end_init);
@@ -259,24 +259,24 @@ namespace AutoGen
 			wrLaber(l_end_init);
 
 			// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			// Èç¹û³õÊ¼»¯±È½Ï¿¿ºó,ĞèÒªÌá¹©¼ä¸ô,ÒÔ±£Ö¤³õÊ¼»¯Íê³É
+			// å¦‚æœåˆå§‹åŒ–æ¯”è¾ƒé å,éœ€è¦æä¾›é—´éš”,ä»¥ä¿è¯åˆå§‹åŒ–å®Œæˆ
 			op1("s_sleep", 16);
-			// ÓÃÓÚ²âÊÔµÄµÈ´ı£¨²»ÄÜÊ¹ÓÃs_sleep£©
+			// ç”¨äºæµ‹è¯•çš„ç­‰å¾…ï¼ˆä¸èƒ½ä½¿ç”¨s_sleepï¼‰
 			op1("s_nop", 100);
 			// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-			// ¸ù¾İWAVEÊı,»ñÈ¡ĞÅºÅÏÂ±ê
+			// æ ¹æ®WAVEæ•°,è·å–ä¿¡å·ä¸‹æ ‡
 			op2("s_mov_b32", s_sig_idx, 1);
 			s_atomic_op(E_OpType::OP_ADD, s_sig_idx, s_signal_slot_addr, wave_num_offset * 4, true);
 			s_wait_lgkmcnt(0);
 
-			// ¸ù¾İĞÅºÅÏÂ±ê¼ÆËãĞÅºÅµØÖ·
+			// æ ¹æ®ä¿¡å·ä¸‹æ ‡è®¡ç®—ä¿¡å·åœ°å€
 			op3("v_lshlrev_b32", v_tmp2, 2, s_sig_idx);
 			op2("v_mov_b32", v_tmp1, *s_signal_slot_addr + 1);
 			op4("v_add_co_u32", v_signal_addr, "vcc", s_signal_slot_addr, v_tmp2);
 			op5("v_addc_co_u32", *v_signal_addr + 1, "vcc", 0, v_tmp1, "vcc");
 
-			// ³õÊ¼»¯ĞÅºÅ(²»ĞèÒªĞ´ÈëL2). ÊÇ·ñĞèÒªÖ»Ò»¸öthread²Ù×÷???????????
+			// åˆå§‹åŒ–ä¿¡å·(ä¸éœ€è¦å†™å…¥L2). æ˜¯å¦éœ€è¦åªä¸€ä¸ªthreadæ“ä½œ???????????
 			op2("v_mov_b32", v_tmp1, 0);
 			flat_store_dword(1, v_signal_addr, v_tmp1, "off", signal_offset * 4);
 			s_wait_vmcnt(0);
@@ -292,7 +292,7 @@ namespace AutoGen
 		{
 			Var * s_tmp1 = newSgpr("s_tmp1");
 
-			// Ïú»ÙWAVEÊı
+			// é”€æ¯WAVEæ•°
 			op2("s_mov_b32", s_tmp1, 1);
 			s_atomic_op(E_OpType::OP_SUB, s_tmp1, s_signal_slot_addr, wave_num_offset * 4, true);
 			s_wait_lgkmcnt(0);
@@ -301,7 +301,7 @@ namespace AutoGen
 		}
 		void f_send_signal(Var * v_signal_addr, Var * v_signal, uint signal_offset)
 		{
-			// ÕâÀï½«·¢ËÍĞÅºÅµÄwaitcnt·ÅÔÚÕâÀï,ÎªÁË·ÀÖ¹ºó¼ÌÓĞL1µÄÆ¹ÅÒ²Ù×÷,Ôì³Éwaitcnt»ìÂÒ
+			// è¿™é‡Œå°†å‘é€ä¿¡å·çš„waitcntæ”¾åœ¨è¿™é‡Œ,ä¸ºäº†é˜²æ­¢åç»§æœ‰L1çš„ä¹’ä¹“æ“ä½œ,é€ æˆwaitcntæ··ä¹±
 			flat_store_dword(1, v_signal_addr, v_signal, "off", signal_offset * 4);
 			s_wait_vmcnt(0);
 		}
@@ -327,62 +327,62 @@ namespace AutoGen
 			op4("v_add_co_u32", v_signal_addr, "vcc", s_signal_slot_addr, v_tmp1);
 			op5("v_addc_co_u32", *v_signal_addr + 1, "vcc", 0, v_tmp2, "vcc");
 
-			// ½ö±£Áô32¸öthread,¼´Ö»×ö32¸öwaveµÄprefetch
+			// ä»…ä¿ç•™32ä¸ªthread,å³åªåš32ä¸ªwaveçš„prefetch
 			op2("s_mov_b32", "exec_hi", 0);
 
 			op2("s_mov_b32", s_exec_save, "exec_lo");
-			op2("v_mov_b32", v_fetch_idx_stack, 0);						// fetchĞòºÅ¶ÑÕ»ÇåÁã
-			op2("s_mov_b32", s_fetched_data_flag, 0);					// ËùÓĞ´æÔÚµÄfetch±êÖ¾Î»ÇåÁã
+			op2("v_mov_b32", v_fetch_idx_stack, 0);						// fetchåºå·å †æ ˆæ¸…é›¶
+			op2("s_mov_b32", s_fetched_data_flag, 0);					// æ‰€æœ‰å­˜åœ¨çš„fetchæ ‡å¿—ä½æ¸…é›¶
 
 			wrLaber(l_begin_loop);
 			op2("s_mov_b32", "exec_lo", s_exec_save);
 			//op3("s_add_u32", s_loop_cnt2, s_loop_cnt2, 1);
-			// Ê¹fetchÏß³Ì²»Æµ·±¹¤×÷
+			// ä½¿fetchçº¿ç¨‹ä¸é¢‘ç¹å·¥ä½œ
 			op1("s_sleep", 10);
 
-			// ¶ÁÈ¡waveÊı(Èç¹ûatomic²»¸Ä±äSQC,ÔòĞèÒªµ½L2¶ÁÈ¡)(Î´ÍêÈ«²âÊÔ)
+			// è¯»å–waveæ•°(å¦‚æœatomicä¸æ”¹å˜SQC,åˆ™éœ€è¦åˆ°L2è¯»å–)(æœªå®Œå…¨æµ‹è¯•)
 			s_load_dword(1, s_wave_num, s_signal_slot_addr, wave_num_offset * 4);
 			//s_load_dword(1, s_wave_num, s_signal_slot_addr, wave_num_offset * 4, true);
 			s_wait_lgkmcnt(0);
 
-			// Èç¹û»î¶¯waveÊıµÈÓÚ0ÔòÍË³öprefetch
+			// å¦‚æœæ´»åŠ¨waveæ•°ç­‰äº0åˆ™é€€å‡ºprefetch
 			op2("s_cmp_eq_u32", s_wave_num, 0);
 			op1("s_cbranch_scc1", l_end_loop);
 
-			// ¶ÁÈ¡ĞÅºÅ(ĞòºÅ)
+			// è¯»å–ä¿¡å·(åºå·)
 			flat_load_dword(1, v_signal, v_signal_addr, "off", signal_offset * 4);
 			s_wait_vmcnt(0);
 
-			op3("v_lshlrev_b32", v_fetch_flag, v_signal, 1);			// ½«ĞòºÅ×ª»»ÎªÎ»±êÖ¾Î»
-			op2("s_mov_b32", s_exec_save, "exec_lo");					// ±£´æexec
-			op2("v_readfirstlane_b32", s_old_fetch, v_fetch_idx_stack);	// ±£´æ×îÀÏfetcheµÄĞòºÅ
+			op3("v_lshlrev_b32", v_fetch_flag, v_signal, 1);			// å°†åºå·è½¬æ¢ä¸ºä½æ ‡å¿—ä½
+			op2("s_mov_b32", s_exec_save, "exec_lo");					// ä¿å­˜exec
+			op2("v_readfirstlane_b32", s_old_fetch, v_fetch_idx_stack);	// ä¿å­˜æœ€è€fetcheçš„åºå·
 
-			// ÅĞ¶ÏÊÕµ½µÄÔ¤È¡ĞòºÅÊÇ·ñÒÑÔÚĞòºÅ¶ÑÕ»ÖĞ
-			op3("s_or_b32", s_fetched_data_flag, s_fetched_data_flag, 1);	// ¶ã±ÜÊ×´Î½øÈëµÄ0
+			// åˆ¤æ–­æ”¶åˆ°çš„é¢„å–åºå·æ˜¯å¦å·²åœ¨åºå·å †æ ˆä¸­
+			op3("s_or_b32", s_fetched_data_flag, s_fetched_data_flag, 1);	// èº²é¿é¦–æ¬¡è¿›å…¥çš„0
 			op3("v_xor_b32", v_tmp1, s_fetched_data_flag, v_fetch_flag);
 			op3("v_and_b32", v_tmp1, v_tmp1, v_fetch_flag);
-			op3("v_cmpx_ne_u32", "vcc", v_tmp1, 0);						// ÅĞ¶ÏÊÇ·ñÓĞĞÂµÄĞèÒªfetcheµÄ±êÖ¾Î»
+			op3("v_cmpx_ne_u32", "vcc", v_tmp1, 0);						// åˆ¤æ–­æ˜¯å¦æœ‰æ–°çš„éœ€è¦fetcheçš„æ ‡å¿—ä½
 
 			// if vcc == 0 : continue
 			op2("s_cmp_eq_u32", "vcc_lo", 0);
 			op1("s_cbranch_scc1", l_begin_loop);
 
-			op2("v_readfirstlane_b32", s_new_fetch, v_signal);			// »ñµÃĞèÒªfetchµÄµÚÒ»¸öĞòºÅ
+			op2("v_readfirstlane_b32", s_new_fetch, v_signal);			// è·å¾—éœ€è¦fetchçš„ç¬¬ä¸€ä¸ªåºå·
 
-			// ´Ë´¦ÒÑ¾­»ñµÃµÄĞèÒªfetchµÄÏÂ±ê£¬¿ÉÒÔÔÚ´Ë½øĞĞfetch
-			// µ«Îª±£Ö¤³ÌĞò¼ò½à£¬ÈÔ½«ÕæÕıµÄfetch¹¤×÷·ÅÔÚ×îºó
+			// æ­¤å¤„å·²ç»è·å¾—çš„éœ€è¦fetchçš„ä¸‹æ ‡ï¼Œå¯ä»¥åœ¨æ­¤è¿›è¡Œfetch
+			// ä½†ä¸ºä¿è¯ç¨‹åºç®€æ´ï¼Œä»å°†çœŸæ­£çš„fetchå·¥ä½œæ”¾åœ¨æœ€å
 
-			// ¶Ô´æÔÚµÄËùÓĞfetch±êÖ¾Î»¸üĞÂ
+			// å¯¹å­˜åœ¨çš„æ‰€æœ‰fetchæ ‡å¿—ä½æ›´æ–°
 			op2("s_bitset0_b32", s_fetched_data_flag, s_old_fetch);
 			op2("s_bitset1_b32", s_fetched_data_flag, s_new_fetch);
 			op2("s_mov_b32", s_signal, s_new_fetch);
 
-			// ÒÑ¾­fetchµÄÏÂ±êµÄ¶ÑÕ»½øĞĞÒÆÎ»¸üĞÂ
+			// å·²ç»fetchçš„ä¸‹æ ‡çš„å †æ ˆè¿›è¡Œç§»ä½æ›´æ–°
 			op2("s_mov_b32", "exec_lo", s_exec_save);
 			op3("v_add_u32", v_tmp1, v_tid_x, 1);
 			op3("v_lshlrev_b32", v_tmp1, 2, v_tmp1);
 			op3("ds_bpermute_b32", v_fetch_idx_stack, v_tmp1, v_fetch_idx_stack);
-			op3("v_writelane_b32", v_fetch_idx_stack, s_new_fetch, 7);	// Ğ´Èë×îĞÂµÄfetchµÄĞòºÅ
+			op3("v_writelane_b32", v_fetch_idx_stack, s_new_fetch, 7);	// å†™å…¥æœ€æ–°çš„fetchçš„åºå·
 
 			delVar(v_tmp1);
 			delVar(v_tmp2);

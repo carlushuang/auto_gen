@@ -101,19 +101,19 @@ public:
 			// 源文件名
 			if (KernelSrcType == E_KernleType::KERNEL_TYPE_OCL_FILE)
 			{
-				cppFileFullName = "../../../Kernels/" + KernelName + ".cl";
+				cppFileFullName = getKernelDirectory() + KernelName + ".cl";
 			}
 			else if (KernelSrcType == E_KernleType::KERNEL_TYPE_HIP_FILE)
 			{
-				cppFileFullName = "../../../Kernels/" + KernelName + ".cpp";
+				cppFileFullName = getKernelDirectory() + KernelName + ".cpp";
 			}
 			else if (KernelSrcType == E_KernleType::KERNEL_TYPE_BIN_FILE)
 			{
-				srcBinFileFullName = "../../../Kernels/" + KernelName + ".bin";
+				srcBinFileFullName = getKernelDirectory() + KernelName + ".bin";
 			}
 			else if (KernelSrcType == E_KernleType::KERNEL_TYPE_GAS_FILE)
 			{
-				asmFileFullName = "../../../Kernels/" + KernelName + ".s";
+				asmFileFullName = getKernelDirectory() + KernelName + ".s";
 			}
 
 			// 生成的二进制目标文件名(亦可为源二进制文件)
@@ -147,19 +147,19 @@ public:
 			// 源文件名
 			if (KernelSrcType == E_KernleType::KERNEL_TYPE_OCL_FILE)
 			{
-				cppFileFullName = "../../../Kernels/" + KernelFile;
+				cppFileFullName = getKernelDirectory() + KernelFile;
 			}
 			else if (KernelSrcType == E_KernleType::KERNEL_TYPE_HIP_FILE)
 			{
-				cppFileFullName = "../../../Kernels/" + KernelName + ".cpp";
+				cppFileFullName = getKernelDirectory() + KernelName + ".cpp";
 			}
 			else if (KernelSrcType == E_KernleType::KERNEL_TYPE_BIN_FILE)
 			{
-				srcBinFileFullName = "../../../Kernels/" + shortFileName + ".bin";
+				srcBinFileFullName = getKernelDirectory() + shortFileName + ".bin";
 			}
 			else if (KernelSrcType == E_KernleType::KERNEL_TYPE_GAS_FILE)
 			{
-				asmFileFullName = "../../../Kernels/" + KernelFile;
+				asmFileFullName = getKernelDirectory() + KernelFile;
 			}
 
 			// 生成的二进制目标文件名(亦可为源二进制文件)
@@ -223,7 +223,7 @@ public:
 		//buildAsmOption = extCompilerOpt + " -target amdgcn--amdhsa -mcpu=gfx900 -I/home/feifei/projects/Benchmark/Kernels/ ";
 		//buildAsmOption = " -x assembler -mcpu=gfx900 ";
 		//buildAsmOption = " clrxasm -b amdcl2 -g GFX900 -A GFX9 -6 -o gfx800_va.o gfx800_va.s";
-		buildAsmOption = extCompilerOpt + " -x assembler -target amdgcn--amdhsa -mcpu=gfx900 -I/home/feifei/projects/Benchmark/Kernels/ ";
+		buildAsmOption = extCompilerOpt + " -x assembler -target amdgcn--amdhsa -mcpu=gfx900 -I" + getKernelDirectory() + " ";
 	}
 	
 public:
