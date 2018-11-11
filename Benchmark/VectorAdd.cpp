@@ -14,9 +14,9 @@ using namespace AutoTune;
 E_ReturnState VectAddSolution::GenerateSolutionConfigs()
 {
 	T_SolutionConfig * solutionConfig;
-	T_ExtFlatSolutionConfig * extSol;
+	T_ExtSolutionConfig * extSol;
 
-	extSol = new T_ExtFlatSolutionConfig();
+	extSol = new T_ExtSolutionConfig();
 	solutionConfig = new T_SolutionConfig("AutoGen");
 	solutionConfig->extConfig = extSol;
 	SolutionConfigList->push_back(solutionConfig);
@@ -29,16 +29,24 @@ E_ReturnState VectAddSolution::GenerateSolutionConfigs()
 /************************************************************************/
 E_ReturnState VectAddSolution::InitDev()
 {
-	T_ExtVectAddProblemConfig * extProb = (T_ExtVectAddProblemConfig *)ProblemConfig->extConfig;
+	T_ExtProblemConfig * extProb = (T_ExtProblemConfig *)ProblemConfig->extConfig;
+	T_ExtSolutionConfig * extSol = (T_ExtSolutionConfig *)SolutionConfig->extConfig;
 
 	DevMalloc((void**)&(d_a.ptr), extProb->VectorSize * sizeof(float));
 	DevMalloc((void**)&(d_b.ptr), extProb->VectorSize * sizeof(float));
 	DevMalloc((void**)&(d_c.ptr), extProb->VectorSize * sizeof(float));
 
 	SolutionConfig->KernelArgus = new std::list<T_KernelArgu>;
+	extSol->KernelArgus = SolutionConfig->KernelArgus;
 	d_a.size = sizeof(cl_mem);	d_a.isVal = false;	SolutionConfig->KernelArgus->push_back(d_a);
 	d_b.size = sizeof(cl_mem);	d_b.isVal = false;	SolutionConfig->KernelArgus->push_back(d_b);
 	d_c.size = sizeof(cl_mem);	d_c.isVal = false;	SolutionConfig->KernelArgus->push_back(d_c);
+	//d_dbg_thd.size = sizeof(float);
+	//d_dbg_thd.isVal = false;
+	//SolutionConfig->KernelArgus->push_back(d_dbg_thd);
+	//d_dbg_wave.size = sizeof(float);
+	//d_dbg_wave.isVal = false;
+	//SolutionConfig->KernelArgus->push_back(d_dbg_wave);
 
 	Copy2Dev((cl_mem)(d_a.ptr), extProb->h_a, extProb->VectorSize * sizeof(float));
 	Copy2Dev((cl_mem)(d_b.ptr), extProb->h_b, extProb->VectorSize * sizeof(float));
@@ -51,7 +59,7 @@ E_ReturnState VectAddSolution::InitDev()
 /************************************************************************/
 E_ReturnState VectAddSolution::GetBackResult()
 {
-	T_ExtVectAddProblemConfig * extProb = (T_ExtVectAddProblemConfig *)ProblemConfig->extConfig;
+	T_ExtProblemConfig * extProb = (T_ExtProblemConfig *)ProblemConfig->extConfig;
 	Copy2Hst(extProb->h_c, (cl_mem)(d_c.ptr), extProb->VectorSize * sizeof(float));
 }
 
@@ -70,8 +78,8 @@ void VectAddSolution::ReleaseDev()
 /************************************************************************/
 E_ReturnState VectAddSolution::GenerateSolution()
 {
-	T_ExtVectAddProblemConfig * extProb = (T_ExtVectAddProblemConfig *)ProblemConfig->extConfig;
-	T_ExtVectAddSolutionConfig * extSol = (T_ExtVectAddSolutionConfig *)SolutionConfig->extConfig;
+	T_ExtProblemConfig * extProb = (T_ExtProblemConfig *)ProblemConfig->extConfig;
+	T_ExtSolutionConfig * extSol = (T_ExtSolutionConfig *)SolutionConfig->extConfig;
 
 	// ======================================================================
 	// Éú³Éworksize
@@ -94,6 +102,8 @@ E_ReturnState VectAddSolution::GenerateSolution()
 	kw->GenKernelString();
 	kw->PrintKernelString();
 	kw->SaveKernelString2File();
+
+
 
 	return E_ReturnState::SUCCESS;
 }

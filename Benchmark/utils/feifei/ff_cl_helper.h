@@ -7,6 +7,9 @@
 
 #include <CL/cl.h>
 
+#define		DevCheckFunc(val)				cl_checkFuncRet((val), #val, __FILE__, __LINE__)
+#define		DevCheckErr(val)				cl_checkErrNum((val), __FILE__, __LINE__)
+
 static const char *clGetErrorInfo(cl_int error)
 {
 	switch (error)

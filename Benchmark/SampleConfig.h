@@ -3,6 +3,20 @@
 #include "BasicClass.h" 
 
 /************************************************************************/
+/* Õ®”√			                                                        */
+/************************************************************************/
+typedef struct ExtSolutionConfigTpye
+{
+	std::list<T_KernelArgu> * KernelArgus;
+}T_ExtSolutionConfig;
+
+typedef struct ExtProblemConfigType
+{
+	size_t VectorSize;
+	float *h_a, *h_b, *h_c, *c_ref;
+}T_ExtProblemConfig;
+
+/************************************************************************/
 /* FLAT                                                                */
 /************************************************************************/
 typedef struct ExtFlatSolutionConfigTpye
@@ -91,6 +105,7 @@ typedef struct ExtVectAddProblemConfigType
 {
 	size_t VectorSize;
 	float *h_a, *h_b, *h_c, *c_ref;
+	std::list<T_KernelArgu> * KernelArgus;
 }T_ExtVectAddProblemConfig;
 
 /************************************************************************/

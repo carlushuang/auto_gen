@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="BasicClass.h">
-      <Filter>Includes</Filter>
-    </ClInclude>
     <ClInclude Include="ProblemControl.h">
       <Filter>Includes</Filter>
     </ClInclude>
@@ -11,60 +8,33 @@
       <Filter>Includes</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\BoltAMPUtil.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\BoltCLUtil.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\CLUtil.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\OpenCVUtil.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKBitMap.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKFile.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKThread.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKUtil.hpp">
-      <Filter>Includes\utils\amdcl2</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaFlat.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaSmem.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="helper_cl.h">
-      <Filter>Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaMubuf.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaSop.h">
-      <Filter>Samples\Includes</Filter>
+      <Filter>utils\amdcl2</Filter>
     </ClInclude>
     <ClInclude Include="SampleConfig.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
     <ClInclude Include="VectorAdd.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="ReducAdd.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="ProducerConsumer.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaLds.h">
-      <Filter>Samples\Includes</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaGds.h">
       <Filter>Samples\Includes</Filter>
     </ClInclude>
     <ClInclude Include="KernelWriterBasic.h">
@@ -76,32 +46,32 @@
     <ClInclude Include="AutoTuning.h">
       <Filter>Includes</Filter>
     </ClInclude>
-    <ClInclude Include="IsaFlatKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
-    </ClInclude>
-    <ClInclude Include="IsaGdsKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
-    </ClInclude>
     <ClInclude Include="VectorAddKernelWriter.h">
       <Filter>Samples\KernelWriter</Filter>
     </ClInclude>
-    <ClInclude Include="IsaLdsKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
+    <ClInclude Include="utils\glog-0.3.3\glog\log_severity.h">
+      <Filter>utils\glog</Filter>
     </ClInclude>
-    <ClInclude Include="IsaMubufKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
+    <ClInclude Include="utils\glog-0.3.3\glog\logging.h">
+      <Filter>utils\glog</Filter>
     </ClInclude>
-    <ClInclude Include="IsaSmemKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
+    <ClInclude Include="utils\glog-0.3.3\glog\raw_logging.h">
+      <Filter>utils\glog</Filter>
     </ClInclude>
-    <ClInclude Include="IsaSopKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
+    <ClInclude Include="utils\glog-0.3.3\glog\stl_logging.h">
+      <Filter>utils\glog</Filter>
     </ClInclude>
-    <ClInclude Include="ReducAddKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
+    <ClInclude Include="utils\glog-0.3.3\glog\vlog_is_on.h">
+      <Filter>utils\glog</Filter>
     </ClInclude>
-    <ClInclude Include="ProducerConsumerKernelWriter.h">
-      <Filter>Samples\KernelWriter</Filter>
+    <ClInclude Include="utils\feifei\ff_log.h">
+      <Filter>utils\feifei</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\feifei\ff_cl_helper.h">
+      <Filter>utils\feifei</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicClass.h">
+      <Filter>Includes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,40 +81,13 @@
     <ClCompile Include="VectorAdd.cpp">
       <Filter>Samples</Filter>
     </ClCompile>
-    <ClCompile Include="IsaFlat.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaGds.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaLds.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaMubuf.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaSmem.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="IsaSop.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="ReducAdd.cpp">
-      <Filter>Samples</Filter>
-    </ClCompile>
-    <ClCompile Include="ProducerConsumer.cpp">
-      <Filter>Samples</Filter>
+    <ClCompile Include="utils\feifei\ff_log.cpp">
+      <Filter>utils\feifei</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Includes">
       <UniqueIdentifier>{29523e91-5957-45f4-b6c0-2b28ec3df1a1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Includes\utils">
-      <UniqueIdentifier>{2ae1397a-fd8d-410d-966f-187768df57af}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Includes\utils\amdcl2">
-      <UniqueIdentifier>{dd00e094-454f-48db-b608-0b85689807b6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Samples">
       <UniqueIdentifier>{b317f902-cc3f-4e96-aed3-cba511c680f8}</UniqueIdentifier>
@@ -154,6 +97,18 @@
     </Filter>
     <Filter Include="Samples\KernelWriter">
       <UniqueIdentifier>{4b6212e5-44ca-400e-ab19-9bdf56302739}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{2ae1397a-fd8d-410d-966f-187768df57af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\amdcl2">
+      <UniqueIdentifier>{dd00e094-454f-48db-b608-0b85689807b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\glog">
+      <UniqueIdentifier>{9150a5e0-b3b1-4c98-97b0-7421ad082a2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\feifei">
+      <UniqueIdentifier>{d43dba27-3137-4209-b9dd-bb5d641f4b73}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

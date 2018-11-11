@@ -4,6 +4,10 @@
 
 #include "BasicClass.h"
 
+//#include "glog/logging.h"
+//using namespace google;
+#include "ff_log.h"
+using namespace feifei;
 /************************************************************************/
 /* 运行时头文件                                                         */
 /************************************************************************/
@@ -45,14 +49,6 @@ typedef struct DeviceInfoType
 /************************************************************************/
 /* 运行时状态定义															*/
 /************************************************************************/
-typedef struct KernelArguType
-{
-	size_t size;
-	void * ptr;
-	bool isVal;
-	float fVal;
-	int iVal;
-} T_KernelArgu;
 #define		DevStatus						cl_int
 #define		RuntimeCtrl						RuntimeCtrlOcl
 #define		DevProgram						cl_program
@@ -69,8 +65,6 @@ typedef struct KernelArguType
 //RuntimeControl::LanchNDKernel(KERNEL, GRID, BLOCK, ##args)
 #define		MAX_LOG_SIZE					(16384)
 
-#define		DevCheckFunc(val)				cl_checkFuncRet((val), #val, __FILE__, __LINE__)
-#define		DevCheckErr(val)				cl_checkErrNum((val), __FILE__, __LINE__)
 
 /************************************************************************/
 /* 运行时控制基类															*/

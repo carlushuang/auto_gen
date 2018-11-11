@@ -11,6 +11,8 @@ class VectAddSolution : public SolutionCtrlBase
 {
 private:
 	T_KernelArgu d_a, d_b, d_c;
+	float * h_dbg_thd, *h_dbg_wave;
+	T_KernelArgu d_dbg_thd, d_dbg_wave;
 
 public:
 	/************************************************************************/

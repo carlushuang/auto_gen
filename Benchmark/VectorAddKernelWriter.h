@@ -57,6 +57,7 @@ namespace AutoGen
 			flat_load_dword(1, v_b, v_b_addr, "off");
 			s_wait_vmcnt(0);
 			op3("v_add_f32", v_c, v_a, v_b);
+			//op3("v_add_f32_dpp", v_c, v_a, v_b);
 			flat_store_dword(1, v_c_addr, v_c, "off");
 
 			delVar(v_a);

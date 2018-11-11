@@ -7,19 +7,21 @@
 #include "ProblemControl.h"
 
 
-#include "IsaFlat.h"
-#include "IsaGds.h"
-#include "IsaLds.h"
-#include "IsaMubuf.h"
-#include "IsaSmem.h"
-#include "IsaSop.h"
-
+//#include "IsaFlat.h"
+//#include "IsaGds.h"
+//#include "IsaLds.h"
+//#include "IsaMubuf.h"
+//#include "IsaSmem.h"
+//#include "IsaSop.h"
+//
 #include "VectorAdd.h"
-#include "ReducAdd.h"
-#include "ProducerConsumer.h"
+//#include "ReducAdd.h"
+//#include "ProducerConsumer.h"
 
+ 
 int main(int argc, char *argv[])
 {
+
 	RuntimeCtrl::InitRuntime(argc, argv);
 	 
 	// ======================================================================
@@ -49,12 +51,12 @@ int main(int argc, char *argv[])
 	// ----------------------------------------------------------------------
 	// 示例
 	// ----------------------------------------------------------------------
-	//ProblemCtrlBase *vAdd = new VectAddProblem("VectorAdd");
-	//vAdd->RunProblem();
+	ProblemCtrlBase *vAdd = new VectAddProblem("VectorAdd");
+	vAdd->RunProblem();
 	//ProblemCtrlBase *rdcAdd = new ReducAddProblem("ReducAdd");
 	//rdcAdd->RunProblem();
-	ProblemCtrlBase *pc = new ProducerConsumerProblem("Producer-Consumer");
-	pc->RunProblem();
+	//ProblemCtrlBase *pc = new ProducerConsumerProblem("Producer-Consumer");
+	//pc->RunProblem();
 		
 	// ======================================================================
 	// ======================================================================

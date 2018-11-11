@@ -8,6 +8,7 @@
 #include "KernelWriterBasic.h"
 #include "ProblemControl.h"
 
+#include <unistd.h>
 #include <sys/stat.h>
 
 namespace AutoGen
