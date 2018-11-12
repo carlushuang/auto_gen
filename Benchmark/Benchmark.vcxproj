@@ -71,7 +71,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="AutoTuning.h" />
-    <ClInclude Include="BasicClass.h" />
     <ClInclude Include="SampleConfig.h" />
     <ClInclude Include="KernelWriter.h" />
     <ClInclude Include="KernelWriterBasic.h" />
@@ -85,8 +84,12 @@
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKFile.hpp" />
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKThread.hpp" />
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKUtil.hpp" />
+    <ClInclude Include="utils\feifei\ff_basic.h" />
     <ClInclude Include="utils\feifei\ff_cl_helper.h" />
+    <ClInclude Include="utils\feifei\ff_directory.h" />
     <ClInclude Include="utils\feifei\ff_log.h" />
+    <ClInclude Include="utils\feifei\ff_timer.h" />
+    <ClInclude Include="utils\feifei\ff_utils.h" />
     <ClInclude Include="utils\glog-0.3.3\glog\logging.h" />
     <ClInclude Include="utils\glog-0.3.3\glog\log_severity.h" />
     <ClInclude Include="utils\glog-0.3.3\glog\raw_logging.h" />
@@ -99,7 +102,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
+    <ClCompile Include="utils\feifei\ff_directory.cpp" />
     <ClCompile Include="utils\feifei\ff_log.cpp" />
+    <ClCompile Include="utils\feifei\ff_timer.cpp" />
     <ClCompile Include="VectorAdd.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

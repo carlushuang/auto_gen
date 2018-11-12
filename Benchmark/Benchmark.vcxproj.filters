@@ -64,14 +64,23 @@
     <ClInclude Include="utils\glog-0.3.3\glog\vlog_is_on.h">
       <Filter>utils\glog</Filter>
     </ClInclude>
-    <ClInclude Include="utils\feifei\ff_log.h">
-      <Filter>utils\feifei</Filter>
+    <ClInclude Include="utils\feifei\ff_basic.h">
+      <Filter>utils\feifei\include</Filter>
     </ClInclude>
     <ClInclude Include="utils\feifei\ff_cl_helper.h">
-      <Filter>utils\feifei</Filter>
+      <Filter>utils\feifei\include</Filter>
     </ClInclude>
-    <ClInclude Include="BasicClass.h">
-      <Filter>Includes</Filter>
+    <ClInclude Include="utils\feifei\ff_directory.h">
+      <Filter>utils\feifei\include</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\feifei\ff_log.h">
+      <Filter>utils\feifei\include</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\feifei\ff_timer.h">
+      <Filter>utils\feifei\include</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\feifei\ff_utils.h">
+      <Filter>utils\feifei\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +91,12 @@
       <Filter>Samples</Filter>
     </ClCompile>
     <ClCompile Include="utils\feifei\ff_log.cpp">
+      <Filter>utils\feifei</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\feifei\ff_directory.cpp">
+      <Filter>utils\feifei</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\feifei\ff_timer.cpp">
       <Filter>utils\feifei</Filter>
     </ClCompile>
   </ItemGroup>
@@ -109,6 +124,9 @@
     </Filter>
     <Filter Include="utils\feifei">
       <UniqueIdentifier>{d43dba27-3137-4209-b9dd-bb5d641f4b73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\feifei\include">
+      <UniqueIdentifier>{6a879485-a897-430b-ad59-1c73562daa82}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

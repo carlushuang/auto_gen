@@ -1,36 +1,6 @@
 ﻿#pragma once
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <sstream>
-#include <vector>
-#include <regex>
-#include <list>
-#include <algorithm>
-#include <math.h>
-#include <stdarg.h>
-
-#include <map>
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <time.h>
-#endif
-
-#if RUNTIME_CUDA
-#include "cuda.h"
-#include "cuda_runtime.h"
-#endif
-
-#if RUNTIME_OCL
-#include <CL/cl.h>
-#endif
-
 
 /************************************************************************/
 /* 返回类型定义															*/
@@ -146,129 +116,6 @@ struct Option
 
 
 
-/************************************************************************/
-/* OS API计时器															*/
-/************************************************************************/
-#if CPU_TIMER
-#ifdef _WIN32
-class WinTimer
-{
-private:
-	LARGE_INTEGER cpuFreqHz;
-	LARGE_INTEGER startTime;
-	LARGE_INTEGER stopTime;
-
-public:
-	WinTimer() {}
-
-public:
-	void Restart()
-	{
-		QueryPerformanceFrequency(&cpuFreqHz);
-		QueryPerformanceCounter(&startTime);
-	}
-
-	void Stop()
-	{
-		double diffTime100ns;
-		QueryPerformanceCounter(&stopTime);
-		diffTime100ns = (stopTime.QuadPart - startTime.QuadPart) * 1000.0 / cpuFreqHz.QuadPart;
-		ElapsedMilliSec = diffTime100ns / 10.0;
-	}
-
-	double ElapsedMilliSec;
-};
-#else
-class UnixTimer
-{
-private:
-	timespec startTime;
-	timespec stopTime;
-
-public:
-
-public:
-	void Restart()
-	{
-		clock_gettime(CLOCK_MONOTONIC, &startTime);
-	}
-
-	void Stop()
-	{
-		float diffTime100ns;
-		clock_gettime(CLOCK_MONOTONIC, &stopTime);
-		double d_startTime = static_cast<double>(startTime.tv_sec)*1e9 + static_cast<double>(startTime.tv_nsec);
-		double d_currentTime = static_cast<double>(stopTime.tv_sec)*1e9 + static_cast<double>(stopTime.tv_nsec);
-		ElapsedNanoSec = d_currentTime - d_startTime;
-
-		ElapsedMilliSec = ElapsedNanoSec / 1e6;
-	}
-
-	double ElapsedMilliSec;
-	double ElapsedNanoSec = 0;
-};
-#endif
-#endif
-
-/************************************************************************/
-/* GPU计时器																*/
-/************************************************************************/
-#if GPU_TIMER
-
-#if RUNTIME_OCL
-#define ffTimer OclTimer
-class OclTimer
-{
-private:
-
-public:
-	OclTimer()
-	{
-	}
-
-public:
-	void Restart()
-	{
-	}
-
-	void Stop()
-	{
-		ElapsedMilliSec = 0;
-	}
-
-	double ElapsedMilliSec;
-};
-#endif
-#endif
-
-class UnixTimer
-{
-private:
-	timespec startTime;
-	timespec stopTime;
-
-public:
-
-public:
-	void Restart()
-	{
-		clock_gettime(CLOCK_MONOTONIC, &startTime);
-	}
-
-	void Stop()
-	{
-		float diffTime100ns;
-		clock_gettime(CLOCK_MONOTONIC, &stopTime);
-		double d_startTime = static_cast<double>(startTime.tv_sec)*1e9 + static_cast<double>(startTime.tv_nsec);
-		double d_currentTime = static_cast<double>(stopTime.tv_sec)*1e9 + static_cast<double>(stopTime.tv_nsec);
-		ElapsedNanoSec = d_currentTime - d_startTime;
-
-		ElapsedMilliSec = ElapsedNanoSec / 1e6;
-	}
-
-	double ElapsedMilliSec;
-	double ElapsedNanoSec = 0;
-};
 
 static inline std::string getKernelDirectory(){
 #ifdef KERNEL_DIR
@@ -278,4 +125,3 @@ static inline std::string getKernelDirectory(){
 #endif
 }
 
-#include "ff_cl_helper.h"

@@ -5,15 +5,8 @@
 #include <stdarg.h>
 #include <time.h>
 
-#ifdef linux
-#include <unistd.h>
-#include <sys/stat.h>
-#endif
-#ifdef WIN32
-#include <io.h>
-#endif
-
 #include "ff_log.h"
+#include "ff_directory.h"
 
 namespace feifei 
 {
@@ -38,7 +31,12 @@ namespace feifei
 			strftime(log_char_buffer, CHAR_BUFF_SIZE, "[%H:%M:%S]", localtime(&t));
 			printf("%s", log_char_buffer);
 		}
-		printf(format);
+		memset(log_char_buffer, 0, CHAR_BUFF_SIZE);
+		va_list args;
+		va_start(args, format);
+		vsprintf(log_char_buffer, format, args);
+		printf("%s", log_char_buffer);
+		va_end(args);
 		printf("\n");
 	}
 	void print_format_info(std::string msg, ...)
@@ -54,7 +52,6 @@ namespace feifei
 		printf(msg.c_str());
 		printf("\n");
 	}
-
 	void print_format_warn(const char *file, int line, const char * format, ...)
 	{
 		printf("[WARNING]");
@@ -65,7 +62,12 @@ namespace feifei
 			strftime(log_char_buffer, CHAR_BUFF_SIZE, "[%H:%M:%S]", localtime(&t));
 			printf("%s", log_char_buffer);
 		}
-		printf(format);
+		memset(log_char_buffer, 0, CHAR_BUFF_SIZE);
+		va_list args;
+		va_start(args, format);
+		vsprintf(log_char_buffer, format, args);
+		printf("%s", log_char_buffer);
+		va_end(args);
 		if (en_log_file)
 		{
 			char * p = (char * )file;
@@ -101,7 +103,6 @@ namespace feifei
 		}
 		printf("\n");
 	}
-
 	E_ReturnState print_format_err(const char *file, int line, const char * format, ...)
 	{
 		printf("[ERROR]");
@@ -112,7 +113,12 @@ namespace feifei
 			strftime(log_char_buffer, CHAR_BUFF_SIZE, "[%H:%M:%S]", localtime(&t));
 			printf("%s", log_char_buffer);
 		}
-		printf(format);
+		memset(log_char_buffer, 0, CHAR_BUFF_SIZE);
+		va_list args;
+		va_start(args, format);
+		vsprintf(log_char_buffer, format, args);
+		printf("%s", log_char_buffer);
+		va_end(args);
 		if (en_log_file)
 		{
 			char * p = (char *)file;
@@ -150,7 +156,6 @@ namespace feifei
 		printf("\n");
 		return E_ReturnState::FAIL;
 	}
-
 	void print_format_fatal(const char *file, int line, const char * format, ...)
 	{
 		printf("[FATAL]");
@@ -161,7 +166,12 @@ namespace feifei
 			strftime(log_char_buffer, CHAR_BUFF_SIZE, "[%H:%M:%S]", localtime(&t));
 			printf("%s", log_char_buffer);
 		}
-		printf(format);
+		memset(log_char_buffer, 0, CHAR_BUFF_SIZE);
+		va_list args;
+		va_start(args, format);
+		vsprintf(log_char_buffer, format, args);
+		printf("%s", log_char_buffer);
+		va_end(args);
 		if (en_log_file)
 		{
 			char * p = (char *)file;
@@ -203,41 +213,44 @@ namespace feifei
 	/************************************************************************/
 	/* ÎÄ¼þÊä³ö																*/
 	/************************************************************************/
-	std::ofstream * init_log_file(const char * file_name)
+	LogFile::LogFile(std::string file_name)
 	{
-		/*if (access(".//log", F_OK) == -1)
-		{
-			::mkdir(".//log", 0777);
-		}*/
+		log_char_buffer = (char *)malloc(CHAR_BUFF_SIZE);
+
+		ensure_directory(".//log//");
 
 		time_t t = time(0);
 		memset(log_char_buffer, 0, CHAR_BUFF_SIZE);
 		strftime(log_char_buffer, CHAR_BUFF_SIZE, "_%F_%H-%M-%S.log", localtime(&t));
-		//std::string fname = ".//log//" + std::string(file_name) + log_char_buffer;
-		std::string fname = ".//" + std::string(file_name) + log_char_buffer;
-		
-		std::ofstream * file;
-		file = new std::ofstream(fname, std::ios::out | std::ios::trunc);
+		file_name = ".//log//" + std::string(file_name) + log_char_buffer;
 
-		if (!file->is_open())
+		log_file = new std::ofstream(file_name, std::ios::out | std::ios::trunc);
+
+		if (!log_file->is_open())
 		{
-			WARN("can't init log file" + fname);
-			return nullptr;
+			WARN("can't init log file" + file_name);
+			log_file = nullptr;
 		}
-
-		return file;
+	}
+	LogFile::~LogFile()
+	{
+		free(log_char_buffer);
+		if ((log_file != nullptr) && log_file->is_open())
+		{
+			log_file->close();
+		}
 	}
 	
-	void write_format_to_file(std::ofstream * file, const char * format, ...)
+	void LogFile::Log(const char * format, ...)
 	{
 		int cn;
 
-		if (file == nullptr)
+		if (log_file == nullptr)
 		{
 			WARN("can't open log file");
 			return;
 		}
-		if (!file->is_open())
+		if (!log_file->is_open())
 		{
 			WARN("can't open log file");
 			return;
@@ -249,12 +262,33 @@ namespace feifei
 
 		va_list args;
 		va_start(args, format);
-		printf(format, args);
 		cn += vsprintf(log_char_buffer+cn, format, args);
 		va_end(args);
 		cn += sprintf(log_char_buffer + cn, "\n");
 
-		file->write(log_char_buffer, cn);
-		file->flush();
+		log_file->write(log_char_buffer, cn);
+		log_file->flush();
+	}
+	void LogFile::Log(std::string msg, ...)
+	{
+		int cn;
+
+		if (log_file == nullptr)
+		{
+			WARN("can't open log file");
+			return;
+		}
+		if (!log_file->is_open())
+		{
+			WARN("can't open log file");
+			return;
+		}
+
+		time_t t = time(0);
+		memset(log_char_buffer, 0, CHAR_BUFF_SIZE);
+		cn = strftime(log_char_buffer, CHAR_BUFF_SIZE, "[%F_%T]", localtime(&t));
+		
+		log_file->write(msg.c_str(), cn);
+		log_file->flush();
 	}
 }

@@ -21,7 +21,6 @@
  
 int main(int argc, char *argv[])
 {
-
 	RuntimeCtrl::InitRuntime(argc, argv);
 	 
 	// ======================================================================

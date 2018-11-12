@@ -2,12 +2,8 @@
 
 #include <stdarg.h>
 
-#include "BasicClass.h"
+#include "ff_utils.h"
 
-//#include "glog/logging.h"
-//using namespace google;
-#include "ff_log.h"
-using namespace feifei;
 /************************************************************************/
 /* 运行时头文件                                                         */
 /************************************************************************/
