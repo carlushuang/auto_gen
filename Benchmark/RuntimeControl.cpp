@@ -1,5 +1,5 @@
 #include "RuntimeControl.h"
-#include "ProblemControl.h"
+//#include "ProblemControl.h"
 
 int RuntimeCtrlBase::DeviceNum = 0;
 int RuntimeCtrlBase::SpecifyDeviceIdx = DEFAULT_DEVICE;

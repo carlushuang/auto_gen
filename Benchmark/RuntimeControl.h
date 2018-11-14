@@ -283,10 +283,10 @@ public:
 		DeviceInfo.ComputeUnitNum = deviceInfo.maxComputeUnits;
 		DeviceInfo.CoreFreq = deviceInfo.maxClockFrequency * 1e6;
 		DeviceInfo.GlobalMemSize = deviceInfo.globalMemSize;
-
+	
 		DeviceInfo.ProcessingElementNum = DeviceInfo.ComputeUnitNum * GPU_SIMD_NUM_PER_CU * GPU_ALU_NUM_PER_SIMD;
 		DeviceInfo.Fp32Flops = DeviceInfo.ProcessingElementNum * DeviceInfo.CoreFreq * 2;
-
+	
 		printf("################################################################################\n");
 		printf("# Device Info:\n");
 		printf("# Device Id: %d\n", DeviceInfo.DeviceIdx);

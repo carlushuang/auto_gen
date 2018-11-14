@@ -82,6 +82,9 @@
     <ClInclude Include="utils\feifei\ff_utils.h">
       <Filter>utils\feifei\include</Filter>
     </ClInclude>
+    <ClInclude Include="utils\feifei\ff_cmd_args.h">
+      <Filter>utils\feifei\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -97,6 +100,9 @@
       <Filter>utils\feifei</Filter>
     </ClCompile>
     <ClCompile Include="utils\feifei\ff_timer.cpp">
+      <Filter>utils\feifei</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\feifei\ff_cmd_args.cpp">
       <Filter>utils\feifei</Filter>
     </ClCompile>
   </ItemGroup>

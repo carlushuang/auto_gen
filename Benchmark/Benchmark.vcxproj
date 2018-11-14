@@ -86,6 +86,7 @@
     <ClInclude Include="utils\AMDCL2\SDKUtil\SDKUtil.hpp" />
     <ClInclude Include="utils\feifei\ff_basic.h" />
     <ClInclude Include="utils\feifei\ff_cl_helper.h" />
+    <ClInclude Include="utils\feifei\ff_cmd_args.h" />
     <ClInclude Include="utils\feifei\ff_directory.h" />
     <ClInclude Include="utils\feifei\ff_log.h" />
     <ClInclude Include="utils\feifei\ff_timer.h" />
@@ -102,6 +103,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemControl.cpp" />
     <ClCompile Include="RuntimeControl.cpp" />
+    <ClCompile Include="utils\feifei\ff_cmd_args.cpp" />
     <ClCompile Include="utils\feifei\ff_directory.cpp" />
     <ClCompile Include="utils\feifei\ff_log.cpp" />
     <ClCompile Include="utils\feifei\ff_timer.cpp" />

@@ -4,6 +4,7 @@
 #include "ff_directory.h"
 #include "ff_log.h"
 #include "ff_timer.h"
+#include "ff_cmd_args.h"
 
 #include <stdlib.h>
 #include <stdio.h>
