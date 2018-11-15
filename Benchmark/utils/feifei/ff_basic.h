@@ -42,6 +42,7 @@ typedef E_ReturnState(*PRetFunc2)(void* param);
 /************************************************************************/
 typedef enum DataTypeEnum
 {
+	Float,
 	Int,
 	Fp32,
 	Fp64,
