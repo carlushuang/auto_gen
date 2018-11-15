@@ -21,6 +21,8 @@
  
 int main(int argc, char *argv[])
 {
+	//CmdArgs * ca = new CmdArgs(argc, argv);
+
 	RuntimeCtrl::InitRuntime(argc, argv);
 	 
 	// ======================================================================

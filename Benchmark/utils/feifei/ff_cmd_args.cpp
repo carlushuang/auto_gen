@@ -7,33 +7,20 @@
 
 namespace feifei 
 {
+	CmdArgs * CmdArgs::pCmdArgs = nullptr;
+
 	CmdArgs::CmdArgs(int argc, char *argv[])
 	{
 		argsNum = 0;
 		argsMap = new std::map<E_ArgId, T_CmdArg*>();
+		pCmdArgs = this;
 		initCmdArgs();
-		HelpText();
 
 		paserCmdArgs(argc, argv);
 	}
-
-	void CmdArgs::HelpText()
+	CmdArgs * CmdArgs::GetCmdArgs()
 	{
-		std::map<E_ArgId, T_CmdArg *>::iterator it;
-
-		for (it = argsMap->begin(); it != argsMap->end(); it++)
-		{
-			if (it->second->shortName != '\0')
-				printf("-%c", it->second->shortName);
-
-			if (it->second->longName != "")
-				printf("  --%s", it->second->longName.c_str());
-
-			if (it->second->helpText != "")
-				printf(": %s", it->second->helpText.c_str());
-
-			printf(".\n");
-		}
+		return pCmdArgs;
 	}
 
 	void * CmdArgs::GetOneArg(E_ArgId id)
@@ -54,10 +41,8 @@ namespace feifei
 	*/
 	void CmdArgs::initCmdArgs()
 	{
-		addOneArg(CMD_ARG_DEVICE, E_DataType::Int, "-1", 'd', "device", "specify a device.");
-		addOneArg(CMD_ARG_A, E_DataType::Int, "-2", 'a', "test_a", "specify a device.");
-		addOneArg(CMD_ARG_B, E_DataType::Int, "-3", 'b', "test_b");
-		addOneArg(CMD_ARG_C, E_DataType::Int, "-4", 'c');
+		addOneArg(CMD_ARG_HELP, E_DataType::String, "help", 'h', "help", "help infomation");
+		addOneArg(CMD_ARG_DEVICE, E_DataType::Int, "0", 'd', "device", "specify a device");
 	}
 	void CmdArgs::addOneArg(E_ArgId id, E_DataType dType, std::string defaultVal, char sName, std::string lName, std::string tHelp)
 	{
@@ -69,12 +54,7 @@ namespace feifei
 		arg->shortName = sName;
 		arg->longName = lName;
 		arg->helpText = tHelp;
-
-		switch (dType)
-		{
-		case E_DataType::Int:	arg->iValue = atoi(defaultVal.c_str()); break;
-		case E_DataType::Float:	arg->fValue = atof(defaultVal.c_str()); break;
-		}
+		setOneArgValue(arg, defaultVal);
 
 		argsMap->insert(std::pair<E_ArgId, T_CmdArg*>(id, arg));
 		argsNum++;
@@ -85,16 +65,47 @@ namespace feifei
 	 */
 	void CmdArgs::paserCmdArgs(int argc, char *argv[])
 	{
-		for (int i = 0; i < argc; i++)
+		for (int i = 1; i < argc; i++)
 		{
-			if ((argv[i][0] == '-')&&(argv[i][1] == '-'))
+			if ((std::string(argv[i]) == "--help") || (std::string(argv[i]) == "-h"))
 			{
-				setOneArg(std::string(&argv[i][2]), std::string(argv[i + 1]));
+				helpText();
+			}
+			else if ((argv[i][0] == '-')&&(argv[i][1] == '-'))
+			{
+				if (argv[i + 1][0] != '-')
+					setOneArg(std::string(&argv[i][2]), std::string(argv[i + 1]));
 			}
 			else if (argv[i][0] == '-')
 			{
-				setOneArg(argv[i][1], std::string(argv[i + 1]));
+				if(argv[i + 1][0]!='-')
+					setOneArg(argv[i][1], std::string(argv[i + 1]));
 			}
+		}
+	}
+	void CmdArgs::helpText()
+	{
+		std::map<E_ArgId, T_CmdArg *>::iterator it;
+
+		for (it = argsMap->begin(); it != argsMap->end(); it++)
+		{
+			if (it->second->shortName != '\0')
+				printf("-%c", it->second->shortName);
+
+			if (it->second->longName != "")
+				printf(", --%s", it->second->longName.c_str());
+
+			switch (it->second->type)
+			{
+			case E_DataType::Int:printf("(%d)", it->second->iValue); break;
+			case E_DataType::Float:printf("(%.2f)", it->second->fValue); break;
+			case E_DataType::String:printf("(%s)", it->second->sValue.c_str()); break;
+			}
+
+			if (it->second->helpText != "")
+				printf(": %s", it->second->helpText.c_str());
+
+			printf(".\n");
 		}
 	}
 

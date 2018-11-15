@@ -61,6 +61,10 @@ using namespace feifei;
 	flog->Log("a = %.2f.", a);
 
 	<ff_cmd_args>
-	CmdArgs * args = new CmdArgs(argc, argv);
-	int a = *(int*)args->GetOneArg(E_ArgId::CMD_ARG_A);
+	// 1. in main():
+	CmdArgs * cmdArgs = new CmdArgs(argc, argv);
+	....
+	// 2. in other file:
+	CmdArgs * args = CmdArgs::GetCmdArgs();
+	int a = *(int*)args->GetOneArg(E_ArgId::CMD_ARG_DEVICE);
 */
