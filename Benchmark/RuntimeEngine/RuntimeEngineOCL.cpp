@@ -4,6 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#define		GPU_CORE_FREQ_HZ		(1.5e9)
+#define		GPU_SE_NUM				(4)
+#define		GPU_CU_NUM_PER_SE		(16)
+#define		GPU_SIMD_NUM_PER_CU		(4)
+#define		GPU_ALU_NUM_PER_SIMD	(16)
+#define		GPU_ALU_NUM				(GPU_ALU_NUM_PER_SIMD*GPU_SIMD_NUM_PER_CU*GPU_CU_NUM_PER_SE*GPU_SE_NUM)
+#define		GPU_CALCULATION			(GPU_ALU_NUM * GPU_CORE_FREQ_HZ)
+
 #define MAX_LOG_SIZE (16384)
 
 #define CHECK_OCL_ERR(status, msg) \
@@ -14,6 +22,8 @@
 		}\
 	}while(0)
 
+
+RuntimeEngineOCL RuntimeEngineOCL::INSTANCE;
 
 class OCLDevice;
 class OCLStream : public StreamBase{
@@ -82,6 +92,19 @@ public:
 	size_t global_size[3];
 };
 
+#define CL_DEV_INFO_P(ptr, size, param, id) \
+	do{				\
+		cl_int status = clGetDeviceInfo(id, param, size, ptr, NULL); \
+		if(status != CL_SUCCESS){		\
+			std::cerr<<"Failt to clGetDeviceInfo("#param")"<<std::endl; \
+			return;	\
+		}	\
+	}while(0)
+
+#define CL_DEV_INFO(store, param, id) \
+		CL_DEV_INFO_P(&store, sizeof(store), param, id)
+	
+
 class OCLDevice : public DeviceBase{
 public:
 	OCLDevice(void * obj, RuntimeEngineOCL * re):DeviceBase(obj), engine(re){}
@@ -99,7 +122,33 @@ public:
 		OCLStream * stream = new OCLStream(queue, this, is_async);
 		return stream;
 	}
+	virtual void GetDeviceInfo(DeviceInfo * dev_info){
+		if(!dev_info)
+			return ;
+		cl_device_id dev_id = (cl_device_id)object();
+		cl_uint v_uint;
+		cl_ulong v_ulong;
+		char v_char[1024];
+
+		dev_info->DeviceIdx = this->index;
+
+		CL_DEV_INFO(v_uint, CL_DEVICE_MAX_COMPUTE_UNITS, dev_id);
+		dev_info->ComputeUnitNum = v_uint;
+
+		CL_DEV_INFO_P(v_char, sizeof(v_char), CL_DEVICE_NAME, dev_id);
+		dev_info->DeviceName = v_char;
+
+		CL_DEV_INFO(v_uint, CL_DEVICE_MAX_CLOCK_FREQUENCY, dev_id);
+		dev_info->CoreFreq =v_uint * 1e6;
+
+		CL_DEV_INFO(v_ulong, CL_DEVICE_GLOBAL_MEM_SIZE, dev_id);
+		dev_info->GlobalMemSize = v_ulong;
+
+		dev_info->ProcessingElementNum = dev_info->ComputeUnitNum * GPU_SIMD_NUM_PER_CU * GPU_ALU_NUM_PER_SIMD;
+		dev_info->Fp32Flops = dev_info->ProcessingElementNum * dev_info->CoreFreq * 2;
+	}
 	RuntimeEngineOCL * engine;
+	int index;
 };
 
 struct OCLCodeObject: public CodeObject {
@@ -120,6 +169,29 @@ struct OCLCodeObject: public CodeObject {
 
 		KernelObject * kernel_obj = new KernelObject(kernel);
 		return kernel_obj;
+	}
+	virtual E_ReturnState Serialize(std::ostream & os ){
+		cl_int status;
+		cl_program program = (cl_program)object();
+		size_t binary_size;
+		status = clGetProgramInfo(program, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
+		if(status != CL_SUCCESS){
+			std::cerr<<"clGetProgramInfo Fail"<<std::endl;
+			return E_ReturnState::FAIL;
+		}
+		unsigned char * binary_data = new unsigned char[binary_size];
+		unsigned char* src[1] = { binary_data };
+		status = clGetProgramInfo(program, CL_PROGRAM_BINARIES, sizeof(src), &src, nullptr);
+		if(status != CL_SUCCESS){
+			std::cerr<<"clGetProgramInfo Fail to dump binary"<<std::endl;
+			delete [] binary_data;
+			return E_ReturnState::FAIL;
+		}
+
+		os.write((const char*)binary_data, binary_size);
+		os.flush();
+		delete [] binary_data;
+		return E_ReturnState::SUCCESS;
 	}
 };
 
@@ -177,11 +249,15 @@ E_ReturnState RuntimeEngineOCL::Init(){
 
 	for(int i=0;i<num_devices;i++){
 		OCLDevice *dev = new OCLDevice(cl_devices[i], this);
-
+		dev->index = i;
 		std::unique_ptr<DeviceBase> dev_ptr(dev);
 		devices.push_back(std::move(dev_ptr));
 	}
 	return E_ReturnState::SUCCESS;
+}
+
+E_ReturnState RuntimeEngineOCL::Destroy(){
+
 }
 int RuntimeEngineOCL::GetDeviceNum() const{
 	return devices.size();

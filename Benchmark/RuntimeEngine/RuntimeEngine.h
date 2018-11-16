@@ -49,7 +49,7 @@ public:
 struct CodeObject{
 	OBJ_DECLARE(CodeObject)
 public:
-	virtual bool Serialize(std::ostream & os ){}
+	virtual E_ReturnState Serialize(std::ostream & os ){}
 	virtual KernelObject * CreateKernelObject(const char * kernel_name){}
 };
 
@@ -115,19 +115,44 @@ protected:
 	bool is_async;
 };
 
+typedef struct DeviceInfoType
+{
+	unsigned int DeviceIdx;
+	std::string DeviceName;
+	unsigned int ComputeUnitNum;
+	unsigned int ProcessingElementNum;
+	unsigned long GlobalMemSize;
+	size_t ConstBufSize;
+	size_t LocalMemSize;
+	std::string RuntimeVersion;
+	double CoreFreq;
+	double Fp32Flops;
+} DeviceInfo;
+
+static inline int DumpDeviceInfo(DeviceInfo * dev_info){
+	printf("#####################   Device Info  #####################\n");
+	printf("# Device Id: %d\n", dev_info->DeviceIdx);
+	printf("# Device Name: %s\n", dev_info->DeviceName.c_str());
+	printf("# CU num: %d\n", dev_info->ComputeUnitNum);
+	printf("# PE num: %d\n", dev_info->ProcessingElementNum);
+	printf("# Clock Frequency: %.1f GHz\n", dev_info->CoreFreq * 1e-9);
+	printf("# Performence: %.1f Tflops\n", dev_info->Fp32Flops * 1e-12);
+	printf("# Global Memory: %.1fG Byte\n", dev_info->GlobalMemSize * 1e-9);
+	printf("##########################################################\n");
+}
+
 class DeviceBase {
 	OBJ_DECLARE(DeviceBase)
 public:
 	virtual StreamBase * CreateStream(bool is_async=false){}
+	virtual void GetDeviceInfo(DeviceInfo * dev_info){}
 };
 
 // Base class for runtime control, aka context. should be singleton
 class RuntimeEngineBase {
 public:
-	RuntimeEngineBase(){}
-	virtual ~RuntimeEngineBase(){}
-
 	virtual E_ReturnState Init() = 0;
+	virtual E_ReturnState Destroy() = 0;
 
 	virtual void * AllocDeviceMem(int bytes){}
 	virtual void * AllocPinnedMem(int bytes){}
@@ -138,6 +163,7 @@ public:
 	virtual DeviceBase * GetDevice(int index) = 0;
 };
 
+class RuntimeEngine;
 #ifdef RUNTIME_OCL
 #include "RuntimeEngineOCL.h"
 #endif
@@ -147,20 +173,20 @@ public:
 
 class RuntimeEngine{
 public:
-	static RuntimeEngineBase* Create(std::string name){
+	static RuntimeEngineBase* Get(std::string name){
 #ifdef RUNTIME_OCL
 		if(name == "opencl" || name == "OpenCL" || name == "ocl")
-			return new RuntimeEngineOCL;
+			return &RuntimeEngineOCL::INSTANCE;
 #endif
 #ifdef RUNTIME_HSA
 		if(name == "hsa" || name == "HSA")
-			return new RuntimeEngineHSA;
+			return &RuntimeEngineHSA::INSTANCE;
 #endif
 		std::cerr<<"N/A runtime ctrl name "<<name<<std::endl;
 		return nullptr;
 	}
 	static void Destroy(RuntimeEngineBase * runtime_ctl){
 		if(runtime_ctl)
-			delete runtime_ctl;
+			runtime_ctl->Destroy();
 	}
 };

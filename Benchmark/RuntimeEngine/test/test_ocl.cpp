@@ -1,6 +1,7 @@
 #include <RuntimeEngine.h>
 #include <iostream>
 #include <assert.h>
+#include <fstream>
 
 #include <random>
 #include <math.h>
@@ -21,13 +22,18 @@ static void random_vec(float * vec, int num){
 }
 
 int main(){
-	RuntimeEngineBase * engine = RuntimeEngine::Create("OpenCL");
+	RuntimeEngineBase * engine = RuntimeEngine::Get("OpenCL");
 	E_ReturnState rtn;
 
 	rtn = engine->Init();
 	assert(rtn == E_ReturnState::SUCCESS);
 
 	DeviceBase * dev = engine->GetDevice(0);
+	{
+		DeviceInfo dev_info;
+		dev->GetDeviceInfo(&dev_info);
+		DumpDeviceInfo(&dev_info);
+	}
 	StreamBase* stream = dev->CreateStream();
 
 	unsigned char * bin_content;
@@ -50,6 +56,9 @@ int main(){
 	assert(code_obj);
 
 	delete [] bin_content;
+
+	std::ofstream ofs("vector_add_dump.bin", std::ios::binary);
+	code_obj->Serialize(ofs);
 
 	KernelObject * kernel_obj = code_obj->CreateKernelObject("vector_add");
 	assert(kernel_obj);

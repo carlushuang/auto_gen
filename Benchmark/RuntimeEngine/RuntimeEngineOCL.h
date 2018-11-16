@@ -5,11 +5,11 @@
 #include <vector>
 #include <memory>
 
+
 class RuntimeEngineOCL : public RuntimeEngineBase{
 public:
-	RuntimeEngineOCL(){}
-	~RuntimeEngineOCL(){}
 	virtual E_ReturnState Init();
+	virtual E_ReturnState Destroy();
 
 	virtual void * AllocDeviceMem(int bytes);
 	virtual void * AllocPinnedMem(int bytes);
@@ -23,6 +23,11 @@ public:
 	cl_context 			context;
 
 	std::vector<std::unique_ptr<DeviceBase>> devices;
+private:
+	RuntimeEngineOCL(){}
+	static RuntimeEngineOCL INSTANCE;
+
+	friend class RuntimeEngine;
 };
 
 class OCLBinaryCompiler : public CompilerBase<RuntimeEngineOCL>{
