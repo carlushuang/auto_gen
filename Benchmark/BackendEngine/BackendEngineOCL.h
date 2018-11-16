@@ -6,11 +6,12 @@
 #include <memory>
 
 
-class RuntimeEngineOCL : public RuntimeEngineBase{
+class BackendEngineOCL : public BackendEngineBase{
 public:
-	virtual E_ReturnState Init();
-	virtual E_ReturnState Destroy();
-
+	~BackendEngineOCL(){
+		if(Inited())
+			Destroy();
+	}
 	virtual void * AllocDeviceMem(int bytes);
 	virtual void * AllocPinnedMem(int bytes);
 	virtual E_ReturnState Memcpy(void * dst, void * src, int bytes, enum MEMCPY_TYPE memcpy_type, StreamBase * stream);
@@ -24,33 +25,36 @@ public:
 
 	std::vector<std::unique_ptr<DeviceBase>> devices;
 private:
-	RuntimeEngineOCL(){}
-	static RuntimeEngineOCL INSTANCE;
+	BackendEngineOCL(){}
+	static BackendEngineOCL INSTANCE;
 
-	friend class RuntimeEngine;
+	virtual E_ReturnState Init();
+	virtual E_ReturnState Destroy();
+
+	friend class BackendEngine;
 };
 
-class OCLBinaryCompiler : public CompilerBase<RuntimeEngineOCL>{
+class OCLBinaryCompiler : public CompilerBase<BackendEngineOCL>{
 public:
-	OCLBinaryCompiler(RuntimeEngineBase * runtime_ctl_) : CompilerBase( dynamic_cast<RuntimeEngineOCL*>(runtime_ctl_)){}
+	OCLBinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase( dynamic_cast<BackendEngineOCL*>(runtime_ctl_)){}
 	~OCLBinaryCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 };
 
-class OCLASMCompiler : public CompilerBase<RuntimeEngineOCL>{
+class OCLASMCompiler : public CompilerBase<BackendEngineOCL>{
 public:
-	OCLASMCompiler(RuntimeEngineBase * runtime_ctl_) : CompilerBase(dynamic_cast<RuntimeEngineOCL*>(runtime_ctl_)){}
+	OCLASMCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(dynamic_cast<BackendEngineOCL*>(runtime_ctl_)){}
 	~OCLASMCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 };
 
-class OCLCCompiler : public CompilerBase<RuntimeEngineOCL>{
+class OCLCCompiler : public CompilerBase<BackendEngineOCL>{
 public:
-	OCLCCompiler(RuntimeEngineBase * runtime_ctl_) : CompilerBase(dynamic_cast<RuntimeEngineOCL*>(runtime_ctl_)){}
+	OCLCCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(dynamic_cast<BackendEngineOCL*>(runtime_ctl_)){}
 	~OCLCCompiler(){}
 	virtual std::string GetBuildOption();
 

@@ -1,4 +1,4 @@
-#include <RuntimeEngine.h>
+#include <BackendEngine.h>
 #include <iostream>
 #include <assert.h>
 #include <fstream>
@@ -21,14 +21,13 @@ static void random_vec(float * vec, int num){
 	}
 }
 
+#define OCL_ENGINE() BackendEngine::Get("OpenCL")
+
 int main(){
-	RuntimeEngineBase * engine = RuntimeEngine::Get("OpenCL");
-	E_ReturnState rtn;
+	//BackendEngineBase * engine = BackendEngine::Get("OpenCL");
+	//assert(OCL_ENGINE());
 
-	rtn = engine->Init();
-	assert(rtn == E_ReturnState::SUCCESS);
-
-	DeviceBase * dev = engine->GetDevice(0);
+	DeviceBase * dev = OCL_ENGINE()->GetDevice(0);
 	{
 		DeviceInfo dev_info;
 		dev->GetDeviceInfo(&dev_info);
@@ -36,6 +35,7 @@ int main(){
 	}
 	StreamBase* stream = dev->CreateStream();
 
+	E_ReturnState rtn;
 	unsigned char * bin_content;
 	int bin_size;
 #if 0
@@ -43,7 +43,7 @@ int main(){
 	rtn = GetFileContent("vector_add.bin", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	OCLBinaryCompiler * compiler = new OCLBinaryCompiler(engine);
+	OCLBinaryCompiler * compiler = new OCLBinaryCompiler(OCL_ENGINE());
 	CodeObject * code_obj = (*compiler)(bin_content, bin_size, dev);
 	assert(code_obj);
 #endif
@@ -51,22 +51,26 @@ int main(){
 	rtn = GetFileContent("vector_add.cl", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	OCLCCompiler * compiler = new OCLCCompiler(engine);
+	OCLCCompiler * compiler = new OCLCCompiler(OCL_ENGINE());
 	CodeObject * code_obj = (*compiler)(bin_content, bin_size, dev);
 	assert(code_obj);
 
+	delete compiler;
 	delete [] bin_content;
 
+	// dump code object to file
 	std::ofstream ofs("vector_add_dump.bin", std::ios::binary);
 	code_obj->Serialize(ofs);
 
 	KernelObject * kernel_obj = code_obj->CreateKernelObject("vector_add");
 	assert(kernel_obj);
 
+	delete code_obj;
+
 	// prepare kernel arg
-	void * d_mem_a = engine->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
-	void * d_mem_b = engine->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
-	void * d_mem_c = engine->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
+	void * d_mem_a = OCL_ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
+	void * d_mem_b = OCL_ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
+	void * d_mem_c = OCL_ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
 
 	float * h_a = new float[ARRAY_SIZE];
 	float * h_b = new float[ARRAY_SIZE];
@@ -81,9 +85,9 @@ int main(){
 		}
 	}
 
-	rtn = engine->Memcpy(d_mem_a, h_a, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
+	rtn = OCL_ENGINE()->Memcpy(d_mem_a, h_a, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
 	assert(rtn == E_ReturnState::SUCCESS);
-	rtn = engine->Memcpy(d_mem_b, h_b, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
+	rtn = OCL_ENGINE()->Memcpy(d_mem_b, h_b, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
 	assert(rtn == E_ReturnState::SUCCESS);
 
 	kernel_obj->SetKernelArg(&d_mem_a);
@@ -105,7 +109,7 @@ int main(){
 	stream->Launch(1);
 	stream->Wait();
 
-	rtn = engine->Memcpy(h_c_dev, d_mem_c, ARRAY_SIZE * sizeof(float), MEMCPY_DEV_TO_HOST, stream);
+	rtn = OCL_ENGINE()->Memcpy(h_c_dev, d_mem_c, ARRAY_SIZE * sizeof(float), MEMCPY_DEV_TO_HOST, stream);
 	assert(rtn == E_ReturnState::SUCCESS);
 
 	{
@@ -121,20 +125,17 @@ int main(){
 		std::cout<<"Compute valid:"<< (is_valid?"valid":"false") <<std::endl;
 	}
 
-	engine->Free(d_mem_a);
-	engine->Free(d_mem_b);
-	engine->Free(d_mem_c);
+	OCL_ENGINE()->Free(d_mem_a);
+	OCL_ENGINE()->Free(d_mem_b);
+	OCL_ENGINE()->Free(d_mem_c);
 
 	delete [] h_a;
 	delete [] h_b;
 	delete [] h_c;
 	delete [] h_c_dev;
 
-	delete compiler;
-	delete code_obj;
 	delete kernel_obj;
 
 	delete stream;
-	RuntimeEngine::Destroy(engine);
 	return 0;
 }

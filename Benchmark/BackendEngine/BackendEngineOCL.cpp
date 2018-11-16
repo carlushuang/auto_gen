@@ -1,5 +1,5 @@
 
-#include "RuntimeEngine.h"
+#include "BackendEngine.h"
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
@@ -23,7 +23,7 @@
 	}while(0)
 
 
-RuntimeEngineOCL RuntimeEngineOCL::INSTANCE;
+BackendEngineOCL BackendEngineOCL::INSTANCE;
 
 class OCLDevice;
 class OCLStream : public StreamBase{
@@ -107,7 +107,7 @@ public:
 
 class OCLDevice : public DeviceBase{
 public:
-	OCLDevice(void * obj, RuntimeEngineOCL * re):DeviceBase(obj), engine(re){}
+	OCLDevice(void * obj, BackendEngineOCL * re):DeviceBase(obj), engine(re){}
 	~OCLDevice(){}
 	virtual StreamBase * CreateStream(bool is_async=false){
 		cl_queue_properties q_prop = 0;
@@ -147,7 +147,7 @@ public:
 		dev_info->ProcessingElementNum = dev_info->ComputeUnitNum * GPU_SIMD_NUM_PER_CU * GPU_ALU_NUM_PER_SIMD;
 		dev_info->Fp32Flops = dev_info->ProcessingElementNum * dev_info->CoreFreq * 2;
 	}
-	RuntimeEngineOCL * engine;
+	BackendEngineOCL * engine;
 	int index;
 };
 
@@ -202,10 +202,15 @@ static void toCLDeviceID(std::vector<std::unique_ptr<DeviceBase>> & dev_vec,  st
 	}
 }
 
-E_ReturnState RuntimeEngineOCL::Init(){
+E_ReturnState BackendEngineOCL::Init(){
 	cl_int status = CL_SUCCESS;
 	cl_uint num_platforms;
 	platform = NULL;
+
+	// Ignore multiple init
+	if(Inited())
+		return E_ReturnState::SUCCESS;
+
 	status = clGetPlatformIDs(0, NULL, &num_platforms);
 	CHECK_OCL_ERR(status, "clGetPlatformIDs failed.");
 	if (0 < num_platforms)
@@ -253,21 +258,21 @@ E_ReturnState RuntimeEngineOCL::Init(){
 		std::unique_ptr<DeviceBase> dev_ptr(dev);
 		devices.push_back(std::move(dev_ptr));
 	}
+	this->inited = true;
 	return E_ReturnState::SUCCESS;
 }
 
-E_ReturnState RuntimeEngineOCL::Destroy(){
-
+E_ReturnState BackendEngineOCL::Destroy(){
 }
-int RuntimeEngineOCL::GetDeviceNum() const{
+int BackendEngineOCL::GetDeviceNum() const{
 	return devices.size();
 }
-DeviceBase * RuntimeEngineOCL::GetDevice(int index){
+DeviceBase * BackendEngineOCL::GetDevice(int index){
 	if(index > (devices.size()-1))
 		return nullptr;
 	return devices[index].get();
 }
-void * RuntimeEngineOCL::AllocDeviceMem(int bytes){
+void * BackendEngineOCL::AllocDeviceMem(int bytes){
 	cl_int err;
 	cl_mem mem = clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
 	if(err != CL_SUCCESS){
@@ -276,10 +281,10 @@ void * RuntimeEngineOCL::AllocDeviceMem(int bytes){
 	}
 	return (void*)mem;
 }
-void * RuntimeEngineOCL::AllocPinnedMem(int bytes){
+void * BackendEngineOCL::AllocPinnedMem(int bytes){
 	return NULL;
 }
-E_ReturnState RuntimeEngineOCL::Memcpy(void * dst, void * src, int bytes, enum MEMCPY_TYPE memcpy_type, StreamBase * stream){
+E_ReturnState BackendEngineOCL::Memcpy(void * dst, void * src, int bytes, enum MEMCPY_TYPE memcpy_type, StreamBase * stream){
 	cl_command_queue command_queue = (cl_command_queue)stream->object();
 	cl_int rtn;
 	switch(memcpy_type){
@@ -301,7 +306,7 @@ E_ReturnState RuntimeEngineOCL::Memcpy(void * dst, void * src, int bytes, enum M
 		break;
 	}
 }
-void RuntimeEngineOCL::Free(void * mem){
+void BackendEngineOCL::Free(void * mem){
 	clReleaseMemObject((cl_mem)mem);
 }
 
@@ -323,12 +328,12 @@ CodeObject * OCLBinaryCompiler::operator()(const unsigned char * content, int by
 	std::vector<cl_device_id> cl_devices;
 	OCLDevice * cl_dev = (OCLDevice*)dev;
 	cl_devices.push_back((cl_device_id)cl_dev->object());
-	//toCLDeviceID(runtime_ctl->devices, cl_devices);
+	//toCLDeviceID(engine->devices, cl_devices);
 
 	OCLCodeObject * code_obj = nullptr;
 	//std::string build_opt = GetBuildOption();
 
-	cl_context ctx = runtime_ctl->context;
+	cl_context ctx = engine->context;
 	int num_devices = 1;
 
 	cl_int *per_status = new cl_int[num_devices];
@@ -375,7 +380,7 @@ std::string OCLCCompiler::GetBuildOption(){
 	return "";
 }
 CodeObject * OCLCCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
-	cl_context ctx = runtime_ctl->context;
+	cl_context ctx = engine->context;
 	size_t src_len[1] = {bytes};
 	OCLDevice * cl_dev = (OCLDevice*)dev;
 	cl_device_id cl_devices[1] = {(cl_device_id)cl_dev->object()};

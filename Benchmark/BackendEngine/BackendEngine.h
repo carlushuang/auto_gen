@@ -55,10 +55,10 @@ public:
 
 class DeviceBase;
 
-template <typename RUNTIME_TYPE>
+template <typename BACKEND_TYPE>
 class CompilerBase {
 public:
-	CompilerBase(RUNTIME_TYPE * runtime_ctl_) : runtime_ctl(runtime_ctl_){}
+	CompilerBase(BACKEND_TYPE * engine_) : engine(engine_){}
 	virtual ~CompilerBase(){}
 	virtual std::string GetBuildOption() = 0;
 	//virtual std::string GetCompiler() = 0;
@@ -66,7 +66,7 @@ public:
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev) = 0;
 
 protected:
-	RUNTIME_TYPE * runtime_ctl;
+	BACKEND_TYPE * engine;
 };
 
 static inline E_ReturnState GetFileContent(const char * file_name, unsigned char ** content, int * bytes){
@@ -149,10 +149,11 @@ public:
 };
 
 // Base class for runtime control, aka context. should be singleton
-class RuntimeEngineBase {
+class BackendEngineBase {
 public:
-	virtual E_ReturnState Init() = 0;
-	virtual E_ReturnState Destroy() = 0;
+	BackendEngineBase():inited(false) {}
+	
+	virtual bool Inited() { return inited;}
 
 	virtual void * AllocDeviceMem(int bytes){}
 	virtual void * AllocPinnedMem(int bytes){}
@@ -161,32 +162,47 @@ public:
 
 	virtual int GetDeviceNum() const  = 0;
 	virtual DeviceBase * GetDevice(int index) = 0;
+
+protected:
+	bool inited;
+
+	virtual E_ReturnState Init() = 0;	// called by BackendEngine::Get()
+	virtual E_ReturnState Destroy() = 0;
+
+	friend class BackendEngine;
 };
 
-class RuntimeEngine;
+class BackendEngine;
 #ifdef RUNTIME_OCL
-#include "RuntimeEngineOCL.h"
+#include "BackendEngineOCL.h"
 #endif
 #ifdef RUNTIME_HSA
-#include "RuntimeEngineHSA.h"
+#include "BackendEngineHSA.h"
 #endif
 
-class RuntimeEngine{
+class BackendEngine{
 public:
-	static RuntimeEngineBase* Get(std::string name){
+	static BackendEngineBase* Get(std::string name){
+		BackendEngineBase * engine = nullptr;
 #ifdef RUNTIME_OCL
 		if(name == "opencl" || name == "OpenCL" || name == "ocl")
-			return &RuntimeEngineOCL::INSTANCE;
+			engine = &BackendEngineOCL::INSTANCE;
 #endif
 #ifdef RUNTIME_HSA
 		if(name == "hsa" || name == "HSA")
-			return &RuntimeEngineHSA::INSTANCE;
+			engine = &BackendEngineHSA::INSTANCE;
 #endif
-		std::cerr<<"N/A runtime ctrl name "<<name<<std::endl;
-		return nullptr;
-	}
-	static void Destroy(RuntimeEngineBase * runtime_ctl){
-		if(runtime_ctl)
-			runtime_ctl->Destroy();
+		if(!engine){
+			std::cerr<<"N/A runtime ctrl name "<<name<<std::endl;
+			return nullptr;
+		}
+		if(!engine->Inited()){
+			E_ReturnState status = engine->Init();
+			if(status != E_ReturnState::SUCCESS){
+				std::cerr<<"Fail to init engine for "<<name<<std::endl;
+				return nullptr;
+			}
+		}
+		return engine;
 	}
 };
