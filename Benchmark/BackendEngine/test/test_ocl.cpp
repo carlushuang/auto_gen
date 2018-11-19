@@ -21,13 +21,14 @@ static void random_vec(float * vec, int num){
 	}
 }
 
-#define OCL_ENGINE() BackendEngine::Get("OpenCL")
+//#define ENGINE() BackendEngine::Get("OpenCL")
+#define ENGINE() BackendEngine::Get("HSA")
 
 int main(){
 	//BackendEngineBase * engine = BackendEngine::Get("OpenCL");
-	//assert(OCL_ENGINE());
+	//assert(ENGINE());
 
-	DeviceBase * dev = OCL_ENGINE()->GetDevice(0);
+	DeviceBase * dev = ENGINE()->GetDevice(0);
 	{
 		DeviceInfo dev_info;
 		dev->GetDeviceInfo(&dev_info);
@@ -42,20 +43,24 @@ int main(){
 	rtn = GetFileContent("vector_add.bin", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	auto * compiler = new OCLBinaryCompiler(OCL_ENGINE());
+	auto * compiler = new OCLBinaryCompiler(ENGINE());
 #endif
 #if 0
 	rtn = GetFileContent("vector_add.cl", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	auto * compiler = new OCLCCompiler(OCL_ENGINE());
+	auto * compiler = new OCLCCompiler(ENGINE());
 #endif
-
+#if 0
 	rtn = GetFileContent("vector_add.s", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	auto * compiler = new OCLASMCompiler(OCL_ENGINE());
+	auto * compiler = new OCLASMCompiler(ENGINE());
+#endif
+	rtn = GetFileContent("vector_add.bin", &bin_content, &bin_size);
+	assert(rtn == E_ReturnState::SUCCESS);
 
+	auto * compiler = new HSABinaryCompiler(ENGINE());
 
 
 	CodeObject * code_obj = (*compiler)(bin_content, bin_size, dev);
@@ -74,9 +79,9 @@ int main(){
 	delete code_obj;
 
 	// prepare kernel arg
-	void * d_mem_a = OCL_ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
-	void * d_mem_b = OCL_ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
-	void * d_mem_c = OCL_ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float));
+	void * d_mem_a = ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float), dev);
+	void * d_mem_b = ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float), dev);
+	void * d_mem_c = ENGINE()->AllocDeviceMem(ARRAY_SIZE * sizeof(float), dev);
 
 	float * h_a = new float[ARRAY_SIZE];
 	float * h_b = new float[ARRAY_SIZE];
@@ -91,15 +96,16 @@ int main(){
 		}
 	}
 
-	rtn = OCL_ENGINE()->Memcpy(d_mem_a, h_a, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
+	rtn = ENGINE()->Memcpy(d_mem_a, h_a, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
 	assert(rtn == E_ReturnState::SUCCESS);
-	rtn = OCL_ENGINE()->Memcpy(d_mem_b, h_b, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
+	rtn = ENGINE()->Memcpy(d_mem_b, h_b, ARRAY_SIZE * sizeof(float), MEMCPY_HOST_TO_DEV, stream);
 	assert(rtn == E_ReturnState::SUCCESS);
 
 	kernel_obj->SetKernelArg(&d_mem_a);
 	kernel_obj->SetKernelArg(&d_mem_b);
 	kernel_obj->SetKernelArg(&d_mem_c);
 	kernel_obj->SetKernelArg(&ARRAY_SIZE);
+
 
 	DispatchParam dispatch_param;
 	dispatch_param.local_size[0] = GROUP_X;
@@ -110,12 +116,12 @@ int main(){
 	dispatch_param.global_size[2] = 0;
 
 	dispatch_param.kernel_obj = kernel_obj;
-	
+
 	stream->SetupDispatch(&dispatch_param);
 	stream->Launch(1);
 	stream->Wait();
 
-	rtn = OCL_ENGINE()->Memcpy(h_c_dev, d_mem_c, ARRAY_SIZE * sizeof(float), MEMCPY_DEV_TO_HOST, stream);
+	rtn = ENGINE()->Memcpy(h_c_dev, d_mem_c, ARRAY_SIZE * sizeof(float), MEMCPY_DEV_TO_HOST, stream);
 	assert(rtn == E_ReturnState::SUCCESS);
 
 	{
@@ -131,9 +137,9 @@ int main(){
 		std::cout<<"Compute valid:"<< (is_valid?"valid":"false") <<std::endl;
 	}
 
-	OCL_ENGINE()->Free(d_mem_a);
-	OCL_ENGINE()->Free(d_mem_b);
-	OCL_ENGINE()->Free(d_mem_c);
+	ENGINE()->Free(d_mem_a);
+	ENGINE()->Free(d_mem_b);
+	ENGINE()->Free(d_mem_c);
 
 	delete [] h_a;
 	delete [] h_b;

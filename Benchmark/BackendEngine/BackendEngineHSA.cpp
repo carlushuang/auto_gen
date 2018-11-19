@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #define		GPU_CORE_FREQ_HZ		(1.5e9)
 #define		GPU_SE_NUM				(4)
@@ -35,83 +36,15 @@
 		}	\
 	}while(0)
 
-class HSAStream : public StreamBase{
-	HSAStream(void * stream_obj, DeviceBase * dev_, bool is_async_) :
-			StreamBase(stream_obj, dev_, is_async_)
-	{}
-	~HSAStream(){
+// store more info
+struct HSAKernelObject: public KernelObject{
+public:
+	HSAKernelObject(void * obj):KernelObject(obj){}
+	~HSAKernelObject(){}
 
-	}
-	virtual E_ReturnState SetupDispatch(DispatchParam * dispatch_param){
-		// Request a packet ID from the queue. Since no packets have been enqueued yet, the expected ID is zero
-		packet_index_ = hsa_queue_add_write_index_relaxed(queue_, 1);
-		const uint32_t queue_mask = queue_->size - 1;
-		aql_ = (hsa_kernel_dispatch_packet_t*) (hsa_kernel_dispatch_packet_t*)(queue_->base_address) + (packet_index_ & queue_mask);
-		const size_t aql_header_size = 4;
-		memset((uint8_t*)aql_ + aql_header_size, 0, sizeof(*aql_) - aql_header_size);
-		// initialize_packet
-		aql_->completion_signal = signal_;
-		aql_->workgroup_size_x = 1;
-		aql_->workgroup_size_y = 1;
-		aql_->workgroup_size_z = 1;
-		aql_->grid_size_x = 1;
-		aql_->grid_size_y = 1;
-		aql_->grid_size_z = 1;
-		aql_->group_segment_size = 0;
-		aql_->private_segment_size = 0;
-		// executable
-		if (0 != load_bin_from_file(d_param->code_file_name.c_str()))
-			return -1;
-		hsa_status_t status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN,
-									NULL, &executable_);
-		HSA_ENFORCE("hsa_executable_create", status);
-		// Load code object
-		status = hsa_executable_load_code_object(executable_, agent_, code_object_, NULL);
-		HSA_ENFORCE("hsa_executable_load_code_object", status);
-		// Freeze executable
-		status = hsa_executable_freeze(executable_, NULL);
-		HSA_ENFORCE("hsa_executable_freeze", status);
-
-		// Get symbol handle
-		hsa_executable_symbol_t kernel_symbol;
-		status = hsa_executable_get_symbol(executable_, NULL, d_param->kernel_symbol.c_str(), agent_,
-											0, &kernel_symbol);
-		HSA_ENFORCE("hsa_executable_get_symbol", status);
-
-		// Get code handle
-		uint64_t code_handle;
-		status = hsa_executable_symbol_get_info(kernel_symbol,
-												HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-												&code_handle);
-		HSA_ENFORCE("hsa_executable_symbol_get_info", status);
-		status = hsa_executable_symbol_get_info(kernel_symbol,
-						HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
-						&group_static_size_);
-		HSA_ENFORCE("hsa_executable_symbol_get_info", status);
-
-		aql_->kernel_object = code_handle;
-
-		// kernel args
-		void *kernarg;
-		status = hsa_memory_allocate(kernarg_region_, d_param->kernel_arg_size, &kernarg);
-		HSA_ENFORCE("hsa_memory_allocate", status);
-		aql_->kernarg_address = kernarg;
-		size_t kernarg_offset = 0;
-		for(auto & ptr : d_param->kernel_arg_list){
-			feed_kernarg(ptr.get(), kernarg_offset);
-		}
-		aql_->workgroup_size_x = d_param->local_size[0];
-		aql_->workgroup_size_y = d_param->local_size[1];
-		aql_->workgroup_size_z = d_param->local_size[2];
-
-		aql_->grid_size_x = d_param->global_size[0];
-		aql_->grid_size_y = d_param->global_size[1];
-		aql_->grid_size_z = d_param->global_size[2];
-	}
-	virtual E_ReturnState Launch(int iter){
-	}
-	virtual E_ReturnState Wait() {
-	}
+	// get this info from kernel object and set to aql
+	uint32_t group_segment_size;
+	uint32_t private_segment_size;
 };
 
 class HSADevice : public DeviceBase{
@@ -121,49 +54,11 @@ public:
 		hsa_agent_t * agent = (hsa_agent_t*)object();
 		delete agent;
 	}
-	virtual StreamBase * CreateStream(bool is_async=false){
-		hsa_queue_t * queue;
-		hsa_agent_t * agent = (hsa_agent_t*)object();
-		// TODO: HSA may limit to signle queue if 
-		hsa_queue_type_t q_type;
-		unsigned int queue_size;
-		hsa_status_t status;
-		status = hsa_agent_get_info(*agent, HSA_AGENT_INFO_QUEUE_TYPE, &q_type);
-		if(status != HSA_STATUS_SUCCESS){
-			std::cerr<<"ERROR: fail to query HSA_AGENT_INFO_QUEUE_TYPE from this agent."<<std:endl;
-			return nullptr;
-		}
-		status = hsa_agent_get_info(*agent, HSA_AGENT_INFO_QUEUE_MAX_SIZE, &queue_size);
-		if(status != HSA_STATUS_SUCCESS){
-			std::cerr<<"ERROR: fail to query HSA_AGENT_INFO_QUEUE_MAX_SIZE from this agent."<<std:endl;
-			return nullptr;
-		}
-		status = hsa_queue_create(*agent, queue_size, q_type, NULL, NULL, UINT32_MAX, UINT32_MAX, &queue);
-    	if(status != HSA_STATUS_SUCCESS){
-			std::cerr<<"ERROR: fail to hsa_queue_create"<<std:endl;
-			return nullptr;
-		}
+	virtual StreamBase * CreateStream(bool is_async=false);
+	virtual void GetDeviceInfo(DeviceInfo * dev_info);
 
-		HSAStream * stream = new HSAStream(queue, this, is_async);
-
-	}
-	virtual void GetDeviceInfo(DeviceInfo * dev_info){
-		hsa_agent_t agent = (hsa_agent_t)object();
-		char v_char[64];
-		unsigned int v_uint;
-		HSA_DEV_INFO(agent, HSA_AGENT_INFO_NAME, v_char );
-		dev_info->DeviceName = v_char;
-
-		HSA_DEV_INFO(agent, HSA_AGENT_INFO_COMPUTE_UNIT_COUNT, &v_uint );
-		dev_info->ComputeUnitNum = v_uint;
-
-		HSA_DEV_INFO(agent, HSA_AGENT_INFO_MAX_CLOCK_FREQUENCY, &v_uint );
-		dev_info->CoreFreq = v_uint;	//Hz
-
-		dev_info->GlobalMemSize = 0;	// HSA have no info for memory size?
-		dev_info->ProcessingElementNum = dev_info->ComputeUnitNum * GPU_SIMD_NUM_PER_CU * GPU_ALU_NUM_PER_SIMD;
-		dev_info->Fp32Flops = dev_info->ProcessingElementNum * dev_info->CoreFreq * 2;
-	}
+	int index;
+	BackendEngineHSA * engine;
 
 	// http://www.hsafoundation.com/html/Content/Runtime/Topics/02_Core/memory.htm
     hsa_region_t system_region;
@@ -171,6 +66,239 @@ public:
     hsa_region_t local_region;
     hsa_region_t gpu_local_region;
 };
+
+struct HSACodeObject : public CodeObject{
+	HSACodeObject(void * obj):CodeObject(obj){}
+	~HSACodeObject(){
+		hsa_code_object_t * code_obj = (hsa_code_object_t *)object();
+		hsa_code_object_destroy(*code_obj);
+		delete code_obj;
+
+		hsa_executable_destroy(executable);
+	}
+public:
+	virtual E_ReturnState Serialize(std::ostream & os ){}
+	virtual KernelObject * CreateKernelObject(const char * kernel_name){
+		hsa_code_object_t * code_obj = (hsa_code_object_t *)object();
+		hsa_agent_t * agent = (hsa_agent_t*) dev->object();
+
+		hsa_status_t status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN,
+                                 NULL, &executable);
+		if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_create, status:"<<status<<std::endl;
+			return nullptr;
+		}
+
+		status = hsa_executable_load_code_object(executable, *agent, *code_obj, NULL);
+    	if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_load_code_object, status:"<<status<<std::endl;
+			return nullptr;
+		}
+
+		status = hsa_executable_freeze(executable, NULL);
+    	if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_freeze, status:"<<status<<std::endl;
+			return nullptr;
+		}
+		hsa_executable_symbol_t kernel_symbol;
+    	status = hsa_executable_get_symbol(executable, NULL, kernel_name, *agent, 0, &kernel_symbol);
+    	if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_get_symbol, status:"<<status<<std::endl;
+			return nullptr;
+		}
+
+		uint64_t code_handle;
+		status = hsa_executable_symbol_get_info(kernel_symbol,
+												HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
+												&code_handle);
+		if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_symbol_get_info(HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT), status:"
+				<<status<<std::endl;
+			return nullptr;
+		}
+		uint32_t group_segment_size;
+		uint32_t private_segment_size;
+		status = hsa_executable_symbol_get_info(kernel_symbol,
+                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
+                    &group_segment_size);
+		if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_symbol_get_info(HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE), status:"
+				<<status<<std::endl;
+			return nullptr;
+		}
+		status = hsa_executable_symbol_get_info(kernel_symbol,
+                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
+                    &private_segment_size);
+		if(status != HSA_STATUS_SUCCESS){
+			std::cerr<<"ERROR: fail to hsa_executable_symbol_get_info(HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE), status:"
+				<<status<<std::endl;
+			return nullptr;
+		}
+		HSAKernelObject * hsa_kernel_obj = new HSAKernelObject(reinterpret_cast<void*>(code_handle));
+		hsa_kernel_obj->group_segment_size = group_segment_size;
+		hsa_kernel_obj->private_segment_size = private_segment_size;
+
+		return (KernelObject*)hsa_kernel_obj;
+	}
+
+	DeviceBase * dev;
+	hsa_executable_t executable;
+};
+
+
+static void aligned_copy_kernarg(void * kernarg, const void * ptr, size_t size, size_t align, size_t & offset){
+    //assert((align & (align - 1)) == 0);
+    offset = ((offset + align - 1) / align) * align;
+	if(kernarg && ptr)
+    	memcpy( (char*)kernarg + offset, ptr, size);
+    offset += size;
+}
+
+static size_t GetKernArgSize(KernelObject * kernel_obj){
+	size_t bytes = 0;
+	for(auto & k_arg : kernel_obj->kernel_args)
+		aligned_copy_kernarg(nullptr, nullptr, k_arg->bytes, k_arg->bytes, bytes);
+	return bytes;
+}
+
+class HSAStream : public StreamBase{
+public:
+	HSAStream(void * stream_obj, DeviceBase * dev_, bool is_async_) :
+			StreamBase(stream_obj, dev_, is_async_)
+	{}
+	~HSAStream(){
+		hsa_queue_t* queue = (hsa_queue_t*)object();
+		hsa_queue_destroy(queue);
+		hsa_signal_destroy(d_signal);
+	}
+	virtual E_ReturnState SetupDispatch(DispatchParam * dispatch_param){
+		HSAKernelObject * kernel_obj = (HSAKernelObject*)dispatch_param->kernel_obj;
+		HSADevice * device = (HSADevice*)this->dev;
+		hsa_queue_t* queue = (hsa_queue_t*)object();
+		hsa_status_t status = hsa_signal_create(1, 0, NULL, &d_signal);
+    	HSA_ENFORCE("hsa_signal_create", status);
+		// Request a packet ID from the queue. Since no packets have been enqueued yet, the expected ID is zero
+		packet_index = hsa_queue_add_write_index_relaxed(queue, 1);
+		const uint32_t queue_mask = queue->size - 1;
+
+		aql = (hsa_kernel_dispatch_packet_t*)(queue->base_address) + (packet_index & queue_mask);
+		const size_t aql_header_size = 4;
+		memset((uint8_t*)aql + aql_header_size, 0, sizeof(*aql) - aql_header_size);
+		// initialize_packet
+		aql->completion_signal = d_signal;
+		//aql->group_segment_size = 0;
+		//aql->private_segment_size = 0;
+
+		aql->kernel_object = reinterpret_cast<uint64_t> (kernel_obj->object());
+
+		// kernel args
+		void *kernarg;
+		size_t kernel_arg_size = GetKernArgSize(kernel_obj);
+		status = hsa_memory_allocate(device->kernarg_region, kernel_arg_size, &kernarg);
+		HSA_ENFORCE("hsa_memory_allocate", status);
+		aql->kernarg_address = kernarg;
+		size_t kernarg_offset = 0;
+		for(auto & ptr : kernel_obj->kernel_args){
+			aligned_copy_kernarg(kernarg, ptr->content, ptr->bytes, ptr->bytes, kernarg_offset);
+		}
+		aql->workgroup_size_x = dispatch_param->local_size[0];
+		aql->workgroup_size_y = dispatch_param->local_size[1];
+		aql->workgroup_size_z = dispatch_param->local_size[2];
+
+		aql->grid_size_x = dispatch_param->global_size[0];
+		aql->grid_size_y = dispatch_param->global_size[1];
+		aql->grid_size_z = dispatch_param->global_size[2];
+
+		dim = 1;
+		if (aql->grid_size_y > 1)
+			dim = 2;
+		if (aql->grid_size_z > 1)
+			dim = 3;
+		
+		// hint for the size
+		//aql->group_segment_size = UINT32_MAX;
+		aql->group_segment_size = kernel_obj->group_segment_size;
+		aql->private_segment_size = kernel_obj->private_segment_size;
+
+		header =
+			(HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
+			(1 << HSA_PACKET_HEADER_BARRIER) |
+			(HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+			(HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+		header &= 0xffff;
+		uint16_t setup = dim << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+    	header = header | (setup << 16);
+
+		return E_ReturnState::SUCCESS;
+	}
+	virtual E_ReturnState Launch(int iter){
+		hsa_queue_t* queue = (hsa_queue_t*)object();
+		for(int i=0;i<iter;i++){
+			__atomic_store_n((uint32_t*)aql, header, __ATOMIC_RELEASE);
+    		hsa_signal_store_relaxed(queue->doorbell_signal, packet_index);
+		}
+	}
+	virtual E_ReturnState Wait() {
+		hsa_signal_value_t result;
+    	result = hsa_signal_wait_acquire(d_signal, HSA_SIGNAL_CONDITION_EQ, 0, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+		E_ReturnState::SUCCESS;
+	}
+
+	hsa_kernel_dispatch_packet_t* aql;
+	hsa_signal_t d_signal;
+	uint64_t packet_index;
+	uint16_t dim;
+	uint32_t header;
+};
+
+StreamBase * HSADevice::CreateStream(bool is_async){
+	hsa_queue_t * queue;
+	hsa_agent_t * agent = (hsa_agent_t*)object();
+	// TODO: HSA may limit to signle queue if 
+	hsa_queue_type_t q_type;
+	unsigned int queue_size;
+	hsa_status_t status;
+	status = hsa_agent_get_info(*agent, HSA_AGENT_INFO_QUEUE_TYPE, &q_type);
+	if(status != HSA_STATUS_SUCCESS){
+		std::cerr<<"ERROR: fail to query HSA_AGENT_INFO_QUEUE_TYPE from this agent."<<std::endl;
+		return nullptr;
+	}
+	status = hsa_agent_get_info(*agent, HSA_AGENT_INFO_QUEUE_MAX_SIZE, &queue_size);
+	if(status != HSA_STATUS_SUCCESS){
+		std::cerr<<"ERROR: fail to query HSA_AGENT_INFO_QUEUE_MAX_SIZE from this agent."<<std::endl;
+		return nullptr;
+	}
+	status = hsa_queue_create(*agent, queue_size, q_type, NULL, NULL, UINT32_MAX, UINT32_MAX, &queue);
+	if(status != HSA_STATUS_SUCCESS){
+		std::cerr<<"ERROR: fail to hsa_queue_create"<<std::endl;
+		return nullptr;
+	}
+
+	HSAStream * stream = new HSAStream(queue, this, is_async);
+	return stream;
+}
+
+void HSADevice::GetDeviceInfo(DeviceInfo * dev_info){
+	hsa_agent_t * agent = (hsa_agent_t*)object();
+	char v_char[64];
+	unsigned int v_uint;
+
+	dev_info->DeviceIdx = this->index;
+
+	HSA_DEV_INFO(*agent, HSA_AGENT_INFO_NAME, v_char );
+	dev_info->DeviceName = v_char;
+
+	HSA_DEV_INFO(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &v_uint );
+	dev_info->ComputeUnitNum = v_uint;
+
+	HSA_DEV_INFO(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_CLOCK_FREQUENCY, &v_uint );
+	dev_info->CoreFreq = v_uint * 1e6;	//MHz -> Hz
+
+	dev_info->GlobalMemSize = 0;	// HSA have no info for memory size?
+	dev_info->ProcessingElementNum = dev_info->ComputeUnitNum * GPU_SIMD_NUM_PER_CU * GPU_ALU_NUM_PER_SIMD;
+	dev_info->Fp32Flops = dev_info->ProcessingElementNum * dev_info->CoreFreq * 2;
+}
+
 
 BackendEngineHSA BackendEngineHSA::INSTANCE;
 
@@ -186,7 +314,7 @@ static hsa_status_t get_agent_callback(hsa_agent_t agent, void *data){
 
 	if (hsa_device_type == HSA_DEVICE_TYPE_GPU) {
 		hsa_agent_t * ptr_agent = new hsa_agent_t;
-		ptr_agent->handle = agent.handle;	// carefull handle opaque struct
+		memcpy(ptr_agent, &agent, sizeof(hsa_agent_t));
 		gpu_agents->push_back(ptr_agent);
 	}
 	if (hsa_device_type == HSA_DEVICE_TYPE_CPU) {
@@ -251,12 +379,14 @@ E_ReturnState BackendEngineHSA::Init(){
 	}
 
 	for(int i=0;i<gpu_agents.size();i++){
-		std::unique_ptr<DeviceBase> dev(new HSADevice(gpu_agents[i], this));
-		devices.push_back(std::move(dev));
+		HSADevice * dev = new HSADevice(gpu_agents[i], this);
+		dev->index = i;
+		std::unique_ptr<DeviceBase> p_dev(dev);
+		devices.push_back(std::move(p_dev));
 	}
 
 	for(int i=0;i<devices.size();i++){
-		HSADevice * dev = devices[i].get();
+		HSADevice * dev = (HSADevice * ) devices[i].get();
 		hsa_agent_t * agent = (hsa_agent_t *)dev->object();
 		status = hsa_agent_iterate_regions(*agent, get_region_callback, dev);
 		HSA_ENFORCE("hsa_agent_iterate_regions", status);
@@ -267,13 +397,15 @@ E_ReturnState BackendEngineHSA::Init(){
 }
 
 E_ReturnState BackendEngineHSA::Destroy(){
-
+	
 }
-int GetDeviceNum() const{
-
+int BackendEngineHSA::GetDeviceNum() const{
+	return devices.size();
 }
-DeviceBase * GetDevice(int index){
-
+DeviceBase * BackendEngineHSA::GetDevice(int index){
+	if(index > (devices.size()-1))
+		return nullptr;
+	return devices[index].get();
 }
 void * BackendEngineHSA::AllocDeviceMem(int bytes, DeviceBase * dev){
 	if(!dev){
@@ -318,4 +450,29 @@ E_ReturnState BackendEngineHSA::Memcpy(void * dst, void * src, int bytes, enum M
 	}
 #endif
 	return E_ReturnState::SUCCESS;
+}
+
+void BackendEngineHSA::Free(void * mem){
+	if(mem)
+		hsa_memory_free(mem);
+}
+
+std::string HSABinaryCompiler::GetBuildOption(){
+	return "";
+}
+
+CodeObject * HSABinaryCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
+	hsa_code_object_t code_object;
+	hsa_status_t status = hsa_code_object_deserialize((void*)content, bytes, NULL, &code_object);
+	if(status != HSA_STATUS_SUCCESS){
+		std::cerr<<"ERROR: fail to hsa_code_object_deserialize, status:"<<status<<std::endl;
+		return nullptr;
+	}
+
+	hsa_code_object_t * p_code_obj = new hsa_code_object_t;
+	memcpy(p_code_obj, &code_object, sizeof(hsa_code_object_t));
+
+	HSACodeObject * hsa_code_obj = new HSACodeObject(p_code_obj);
+	hsa_code_obj->dev = dev;
+	return hsa_code_obj;
 }

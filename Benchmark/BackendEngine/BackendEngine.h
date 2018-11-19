@@ -161,7 +161,7 @@ static inline int DumpDeviceInfo(DeviceInfo * dev_info){
 	printf("# Device Name: %s\n", dev_info->DeviceName.c_str());
 	printf("# CU num: %d\n", dev_info->ComputeUnitNum);
 	printf("# PE num: %d\n", dev_info->ProcessingElementNum);
-	printf("# Clock Frequency: %.1f GHz\n", dev_info->CoreFreq * 1e-9);
+	printf("# Clock Frequency: %.1f MHz\n", dev_info->CoreFreq * 1e-6);
 	printf("# Performence: %.1f Tflops\n", dev_info->Fp32Flops * 1e-12);
 	printf("# Global Memory: %.1fG Byte\n", dev_info->GlobalMemSize * 1e-9);
 	printf("##########################################################\n");
