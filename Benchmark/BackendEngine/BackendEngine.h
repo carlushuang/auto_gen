@@ -2,7 +2,33 @@
 #include <string>
 #include <string>
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>   //mkdir
 #include "BasicClass.h"
+
+
+// generate a tmp folder and return the name
+static inline std::string GenerateTmpDir(){
+	char tmp_dir [15] = {'/','t','m','p','/','g','e','n','X','X','X','X','X','X','\0'};
+	char * name = mkdtemp(tmp_dir);
+	return std::string(name);
+}
+
+static inline bool ExecuteCmdSync(const char * cmd){
+	FILE * pfp = popen(cmd, "r");
+	if(!pfp){
+		printf("ERROR: fail to popen for cmd:%s\n", cmd);
+		return false;
+	}
+		
+	int status = pclose(pfp);
+	if(status != 0){
+		printf("ERROR: pclose %s fail\n", cmd);
+		return false;
+	}	
+	return true;
+}
 
 enum MEMCPY_TYPE{
 	MEMCPY_HOST_TO_DEV,
@@ -155,8 +181,8 @@ public:
 	
 	virtual bool Inited() { return inited;}
 
-	virtual void * AllocDeviceMem(int bytes){}
-	virtual void * AllocPinnedMem(int bytes){}
+	virtual void * AllocDeviceMem(int bytes, DeviceBase * dev = nullptr){}
+	virtual void * AllocPinnedMem(int bytes, DeviceBase * dev = nullptr){}
 	virtual E_ReturnState Memcpy(void * dst, void * src, int bytes, enum MEMCPY_TYPE memcpy_type, StreamBase * stream) = 0;
 	virtual void Free(void * mem) = 0;
 

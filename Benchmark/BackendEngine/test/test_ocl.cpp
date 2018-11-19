@@ -39,19 +39,25 @@ int main(){
 	unsigned char * bin_content;
 	int bin_size;
 #if 0
-	std::cout<<"get kernel from vector_add.bin"<<std::endl;
 	rtn = GetFileContent("vector_add.bin", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	OCLBinaryCompiler * compiler = new OCLBinaryCompiler(OCL_ENGINE());
-	CodeObject * code_obj = (*compiler)(bin_content, bin_size, dev);
-	assert(code_obj);
+	auto * compiler = new OCLBinaryCompiler(OCL_ENGINE());
 #endif
-	std::cout<<"get kernel from vector_add.cl"<<std::endl;
+#if 0
 	rtn = GetFileContent("vector_add.cl", &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	OCLCCompiler * compiler = new OCLCCompiler(OCL_ENGINE());
+	auto * compiler = new OCLCCompiler(OCL_ENGINE());
+#endif
+
+	rtn = GetFileContent("vector_add.s", &bin_content, &bin_size);
+	assert(rtn == E_ReturnState::SUCCESS);
+
+	auto * compiler = new OCLASMCompiler(OCL_ENGINE());
+
+
+
 	CodeObject * code_obj = (*compiler)(bin_content, bin_size, dev);
 	assert(code_obj);
 

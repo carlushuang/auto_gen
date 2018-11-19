@@ -23,6 +23,15 @@
 	}while(0)
 
 
+static void DumpCLBuildLog(cl_program program, cl_device_id device){
+	size_t len;
+	char buffer[2048];
+	std::cout<<"_____________________________cl_build_log"<<std::endl;
+	clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
+	std::cout<<buffer<<std::endl;
+	std::cout<<"_____________________________cl_build_log"<<std::endl;
+}
+
 BackendEngineOCL BackendEngineOCL::INSTANCE;
 
 class OCLDevice;
@@ -272,7 +281,7 @@ DeviceBase * BackendEngineOCL::GetDevice(int index){
 		return nullptr;
 	return devices[index].get();
 }
-void * BackendEngineOCL::AllocDeviceMem(int bytes){
+void * BackendEngineOCL::AllocDeviceMem(int bytes, DeviceBase * dev){
 	cl_int err;
 	cl_mem mem = clCreateBuffer(context, CL_MEM_READ_WRITE, bytes, NULL, &err);
 	if(err != CL_SUCCESS){
@@ -281,23 +290,25 @@ void * BackendEngineOCL::AllocDeviceMem(int bytes){
 	}
 	return (void*)mem;
 }
-void * BackendEngineOCL::AllocPinnedMem(int bytes){
+void * BackendEngineOCL::AllocPinnedMem(int bytes, DeviceBase * dev){
 	return NULL;
 }
 E_ReturnState BackendEngineOCL::Memcpy(void * dst, void * src, int bytes, enum MEMCPY_TYPE memcpy_type, StreamBase * stream){
 	cl_command_queue command_queue = (cl_command_queue)stream->object();
-	cl_int rtn;
+	cl_int status;
 	switch(memcpy_type){
 		case MEMCPY_HOST_TO_DEV:
-			rtn = clEnqueueWriteBuffer(command_queue, (cl_mem)dst, CL_TRUE/*blocking*/, 0, bytes, src, 0, NULL, NULL);
-			if(rtn != CL_SUCCESS){
+			status = clEnqueueWriteBuffer(command_queue, (cl_mem)dst, CL_TRUE/*blocking*/, 0, bytes, src, 0, NULL, NULL);
+			if(status != CL_SUCCESS){
 				std::cerr<<"Fail clEnqueueWriteBuffer"<<std::endl;
+				return E_ReturnState::FAIL;
 			}
 		break;
 		case MEMCPY_DEV_TO_HOST:
-			rtn = clEnqueueReadBuffer(command_queue, (cl_mem)src, CL_TRUE/*blocking*/, 0, bytes, dst, 0, NULL, NULL);
-			if(rtn != CL_SUCCESS){
+			status = clEnqueueReadBuffer(command_queue, (cl_mem)src, CL_TRUE/*blocking*/, 0, bytes, dst, 0, NULL, NULL);
+			if(status != CL_SUCCESS){
 				std::cerr<<"Fail clEnqueueReadBuffer"<<std::endl;
+				return E_ReturnState::FAIL;
 			}
 		break;
 		case MEMCPY_DEV_TO_DEV:
@@ -305,6 +316,7 @@ E_ReturnState BackendEngineOCL::Memcpy(void * dst, void * src, int bytes, enum M
 		default:
 		break;
 	}
+	return E_ReturnState::SUCCESS;
 }
 void BackendEngineOCL::Free(void * mem){
 	clReleaseMemObject((cl_mem)mem);
@@ -345,7 +357,8 @@ CodeObject * OCLBinaryCompiler::operator()(const unsigned char * content, int by
 		bin_data[i] = (unsigned char*)content;
 
 	cl_int status;
-	program = clCreateProgramWithBinary(ctx, num_devices, cl_devices.data(), bin_len, 
+	cl_device_id dev_id = (cl_device_id)dev->object();
+	program = clCreateProgramWithBinary(ctx, num_devices, &dev_id, bin_len, 
 			(const unsigned char**)bin_data, per_status, &status);
 	for (int i = 0; i < num_devices; i++){
 		if(per_status[i] != CL_SUCCESS){
@@ -359,7 +372,7 @@ CodeObject * OCLBinaryCompiler::operator()(const unsigned char * content, int by
 	}
 
 	// ignore build option for from binary source
-	status = clBuildProgram(program, num_devices, cl_devices.data(), NULL, NULL, NULL);
+	status = clBuildProgram(program, num_devices, &dev_id, NULL, NULL, NULL);
 
 	if(status != CL_SUCCESS){
 		std::cerr<<"clBuildProgram faild"<<std::endl;
@@ -373,6 +386,70 @@ out:
 	delete [] per_status;
 	delete [] bin_data;
 	delete [] bin_len;
+	return (CodeObject*)code_obj;
+}
+
+std::string OCLASMCompiler::GetBuildOption(){
+	return "-x assembler -target amdgcn--amdhsa -mcpu=gfx900";
+}
+
+CodeObject * OCLASMCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
+	// hard coded to use opencl clang in rocm install folder 
+	std::string compiler = "/opt/rocm/opencl/bin/x86_64/clang";
+	std::string tmp_dir =  GenerateTmpDir();
+	std::string src_file = tmp_dir + "/src.s";
+	std::string target_file = tmp_dir + "/target.co";
+
+	// First, dump source to tmp directory
+
+	//std::cout<<"  src/obj in "<<tmp_dir<<std::endl;
+
+	// write to src file
+	{
+		std::ofstream ofs(src_file.c_str(), std::ios::binary);
+		ofs.write((const char*)content, bytes);
+		ofs.flush();
+	}
+
+	std::string cmd;
+	cmd = compiler + " " + GetBuildOption() + " -o " + target_file + " " + src_file;
+
+	if(!ExecuteCmdSync(cmd.c_str())){
+		std::cerr<<"ERROR: compile fail for \""<<cmd<<"\"";
+		return nullptr;
+	}
+
+	// Second, load bin file and use OCL api to build
+	unsigned char * bin_content;
+	int bin_bytes;
+	if(GetFileContent(target_file.c_str(), &bin_content, &bin_bytes) != E_ReturnState::SUCCESS){
+		std::cerr<<"ERROR: fail to get object file "<<target_file<<std::endl;
+		return nullptr;
+	}
+	cl_context ctx = engine->context;
+	cl_int status;
+	cl_device_id dev_id = (cl_device_id)dev->object();
+	const unsigned char * cl_bin[1] = {bin_content};
+	size_t cl_bytes = bin_bytes;
+	cl_program program = clCreateProgramWithBinary(ctx, 1, &dev_id , &cl_bytes, 
+			cl_bin, NULL, &status);
+
+	if(status != CL_SUCCESS){
+		std::cerr<<"clCreateProgramWithBinary faild with binary, status:"<<status<<std::endl;
+		delete [] bin_content;
+		return nullptr;
+	}
+	delete [] bin_content;
+	// ignore build option for from binary source
+	status = clBuildProgram(program, 1, &dev_id, NULL, NULL, NULL);
+	if(status != CL_SUCCESS){
+		std::cerr<<"clBuildProgram faild, status:"<<status<<std::endl;
+		DumpCLBuildLog(program, dev_id);
+		clReleaseProgram(program);
+		return nullptr;
+	}
+
+	CodeObject * code_obj = new OCLCodeObject(program);
 	return (CodeObject*)code_obj;
 }
 

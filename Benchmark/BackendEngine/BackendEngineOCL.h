@@ -12,8 +12,8 @@ public:
 		if(Inited())
 			Destroy();
 	}
-	virtual void * AllocDeviceMem(int bytes);
-	virtual void * AllocPinnedMem(int bytes);
+	virtual void * AllocDeviceMem(int bytes, DeviceBase * dev = nullptr);
+	virtual void * AllocPinnedMem(int bytes, DeviceBase * dev = nullptr);
 	virtual E_ReturnState Memcpy(void * dst, void * src, int bytes, enum MEMCPY_TYPE memcpy_type, StreamBase * stream);
 	virtual void Free(void * mem);
 
