@@ -37,31 +37,35 @@ private:
 
 class OCLBinaryCompiler : public CompilerBase{
 public:
-	OCLBinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
+	
 	~OCLBinaryCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 
 	INSTANCE_DECLARE(OCLBinaryCompiler, CompilerBase)
+private:
+	OCLBinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 };
 
 class OCLASMCompiler : public CompilerBase{
 public:
-	OCLASMCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 	~OCLASMCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 	INSTANCE_DECLARE(OCLASMCompiler, CompilerBase)
+private:
+	OCLASMCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 };
 
 class OCLCCompiler : public CompilerBase{
 public:
-	OCLCCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 	~OCLCCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 	INSTANCE_DECLARE(OCLCCompiler, CompilerBase)
+private:
+	OCLCCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 };
