@@ -272,6 +272,7 @@ E_ReturnState BackendEngineOCL::Init(){
 }
 
 E_ReturnState BackendEngineOCL::Destroy(){
+
 }
 int BackendEngineOCL::GetDeviceNum() const{
 	return devices.size();
