@@ -7,6 +7,10 @@
 #include <sys/stat.h>   //mkdir
 #include "BasicClass.h"
 
+// for compiler generate code for specific arch
+#ifndef GPU_ARCH
+#define GPU_ARCH "gfx900"
+#endif
 
 // generate a tmp folder and return the name
 static inline std::string GenerateTmpDir(){
@@ -35,6 +39,13 @@ enum MEMCPY_TYPE{
 	MEMCPY_DEV_TO_HOST,
 	MEMCPY_DEV_TO_DEV,
 };
+
+#define INSTANCE_DECLARE(clz, bass_clz) \
+public:		\
+	static bass_clz * Get(){return static_cast<bass_clz*>(&INSTANCE);}	\
+private:	\
+	static clz INSTANCE;
+
 
 #define OBJ_DECLARE(clz)				\
 public:								\
@@ -80,19 +91,18 @@ public:
 };
 
 class DeviceBase;
-
-template <typename BACKEND_TYPE>
+class BackendEngineBase;
 class CompilerBase {
 public:
-	CompilerBase(BACKEND_TYPE * engine_) : engine(engine_){}
+	CompilerBase(BackendEngineBase * engine_) : engine(engine_){}
 	virtual ~CompilerBase(){}
 	virtual std::string GetBuildOption() = 0;
-	//virtual std::string GetCompiler() = 0;
-
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev) = 0;
+	//virtual std::string GetCompiler() = 0;
+	//virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev) = 0;
 
 protected:
-	BACKEND_TYPE * engine;
+	BackendEngineBase * engine;
 };
 
 static inline E_ReturnState GetFileContent(const char * file_name, unsigned char ** content, int * bytes){
@@ -174,6 +184,12 @@ public:
 	virtual void GetDeviceInfo(DeviceInfo * dev_info){}
 };
 
+enum BackendEngineType{
+	BACKEND_ENGINE_OCL,
+	BACKEND_ENGINE_HSA,
+	BACKEND_ENGINE_NA
+};
+
 // Base class for runtime control, aka context. should be singleton
 class BackendEngineBase {
 public:
@@ -188,6 +204,8 @@ public:
 
 	virtual int GetDeviceNum() const  = 0;
 	virtual DeviceBase * GetDevice(int index) = 0;
+
+	virtual BackendEngineType Type() const = 0;
 
 protected:
 	bool inited;
@@ -211,12 +229,12 @@ public:
 	static BackendEngineBase* Get(std::string name){
 		BackendEngineBase * engine = nullptr;
 #ifdef RUNTIME_OCL
-		if(name == "opencl" || name == "OpenCL" || name == "ocl")
-			engine = &BackendEngineOCL::INSTANCE;
+		if(name == "opencl" || name == "OpenCL" || name == "ocl" || name == "OCL")
+			engine = BackendEngineOCL::Get();
 #endif
 #ifdef RUNTIME_HSA
 		if(name == "hsa" || name == "HSA")
-			engine = &BackendEngineHSA::INSTANCE;
+			engine = BackendEngineHSA::Get();
 #endif
 		if(!engine){
 			std::cerr<<"N/A runtime ctrl name "<<name<<std::endl;
@@ -230,5 +248,60 @@ public:
 			}
 		}
 		return engine;
+	}
+	static CompilerBase * GetCompiler(BackendEngineBase * engine, std::string name){
+		if(!engine)
+			return nullptr;
+		switch(engine->Type()){
+#ifdef RUNTIME_OCL
+			case BACKEND_ENGINE_OCL:
+				if(name == "asm" || name == "ASM")
+					return OCLASMCompiler::Get();
+				if(name == "binary" || name == "Binary" || name == "bin" || name == "BIN")
+					return OCLBinaryCompiler::Get();
+				if(name == "c" || name == "C" || name == "Highlevel" || name == "highlevel")
+					return OCLCCompiler::Get();
+			break;
+#endif
+#ifdef RUNTIME_HSA
+			case BACKEND_ENGINE_HSA:
+				if(name == "asm" || name == "ASM")
+					return HSAASMCompiler::Get();
+				if(name == "binary" || name == "Binary" || name == "bin" || name == "BIN")
+					return HSABinaryCompiler::Get();
+			break;
+#endif
+			default:
+				std::cerr<<"unknown back engine type:"<<engine->Type()<<std::endl;
+				return nullptr;
+			break;
+		}
+#if 0
+		static CompilerBase * GetCompilerFromFile(BackendEngineBase * engine, std::string file_name){
+			size_t found = file_name.find_last_of(".");
+			if(found == std::string::npos){
+				std::Cerr<<"ERROR, file name "<<file_name<<" seems not have extension."
+					" we use extension to distinguish which compiler to use"<<std::endl;
+				return nullptr;
+			}
+			CompilerBase * compiler = nullptr;
+			std::string ext = file_name.substr(found+1);
+			if(ext == "s" || ext == "S" || ext == "asm" || ext == "ASM"){
+				compiler = GetCompiler(engine, "asm");
+			}
+			else if(ext == "cl" || ext == "CL"){
+				if(engine->Type() != BACKEND_ENGINE_OCL){
+					std::cerr<<"ERROR, extension:"<<ext<<" can only run on opencl backend"<<std::endl;
+					return nullptr;
+				}
+				return GetCompiler(engine, "c");
+			}
+			else if(ext == "bin" || ext == "co" || ext == "hasco"){
+				return GetCompiler(engine, "bin");
+			}
+			std::cerr<<"ERROR, unknown extension:"<<ext<<std::endl;
+			return nullptr;
+		}
+#endif
 	}
 };

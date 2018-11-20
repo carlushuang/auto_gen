@@ -123,7 +123,7 @@ public:
 		if(is_async)
 			q_prop |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
 		cl_int status;
-		cl_command_queue queue = clCreateCommandQueue(engine->context, (cl_device_id)this->object(), q_prop, &status);
+		cl_command_queue queue = clCreateCommandQueue(((BackendEngineOCL*)engine)->context, (cl_device_id)this->object(), q_prop, &status);
 		if(status != CL_SUCCESS){
 			std::cerr<<"Failed clCreateCommandQueue"<<std::endl;
 			return nullptr;
@@ -334,7 +334,7 @@ std::string OCLBinaryCompiler::GetBuildOption(){
 	 */
 	return "";
 }
-
+OCLBinaryCompiler OCLBinaryCompiler::INSTANCE(BackendEngineOCL::Get());
 // create one for all
 CodeObject * OCLBinaryCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
 	cl_program program;
@@ -346,7 +346,7 @@ CodeObject * OCLBinaryCompiler::operator()(const unsigned char * content, int by
 	OCLCodeObject * code_obj = nullptr;
 	//std::string build_opt = GetBuildOption();
 
-	cl_context ctx = engine->context;
+	cl_context ctx = ((BackendEngineOCL*)engine)->context;
 	int num_devices = 1;
 
 	cl_int *per_status = new cl_int[num_devices];
@@ -391,9 +391,9 @@ out:
 }
 
 std::string OCLASMCompiler::GetBuildOption(){
-	return "-x assembler -target amdgcn--amdhsa -mcpu=gfx900";
+	return "-x assembler -target amdgcn--amdhsa -mcpu="GPU_ARCH;
 }
-
+OCLASMCompiler OCLASMCompiler::INSTANCE(BackendEngineOCL::Get());
 CodeObject * OCLASMCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
 	// hard coded to use opencl clang in rocm install folder 
 	std::string compiler = "/opt/rocm/opencl/bin/x86_64/clang";
@@ -427,7 +427,7 @@ CodeObject * OCLASMCompiler::operator()(const unsigned char * content, int bytes
 		std::cerr<<"ERROR: fail to get object file "<<target_file<<std::endl;
 		return nullptr;
 	}
-	cl_context ctx = engine->context;
+	cl_context ctx = ((BackendEngineOCL*)engine)->context;
 	cl_int status;
 	cl_device_id dev_id = (cl_device_id)dev->object();
 	const unsigned char * cl_bin[1] = {bin_content};
@@ -457,8 +457,10 @@ CodeObject * OCLASMCompiler::operator()(const unsigned char * content, int bytes
 std::string OCLCCompiler::GetBuildOption(){
 	return "";
 }
+OCLCCompiler OCLCCompiler::INSTANCE(BackendEngineOCL::Get());
+
 CodeObject * OCLCCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
-	cl_context ctx = engine->context;
+	cl_context ctx = ((BackendEngineOCL*)engine)->context;
 	size_t src_len[1] = {bytes};
 	OCLDevice * cl_dev = (OCLDevice*)dev;
 	cl_device_id cl_devices[1] = {(cl_device_id)cl_dev->object()};
