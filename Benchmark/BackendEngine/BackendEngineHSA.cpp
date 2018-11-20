@@ -460,10 +460,69 @@ void BackendEngineHSA::Free(void * mem){
 std::string HSABinaryCompiler::GetBuildOption(){
 	return "";
 }
+HSABinaryCompiler HSABinaryCompiler::INSTANCE(BackendEngineHSA::Get());
 
 CodeObject * HSABinaryCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
 	hsa_code_object_t code_object;
 	hsa_status_t status = hsa_code_object_deserialize((void*)content, bytes, NULL, &code_object);
+	if(status != HSA_STATUS_SUCCESS){
+		std::cerr<<"ERROR: fail to hsa_code_object_deserialize, status:"<<status<<std::endl;
+		return nullptr;
+	}
+
+	hsa_code_object_t * p_code_obj = new hsa_code_object_t;
+	memcpy(p_code_obj, &code_object, sizeof(hsa_code_object_t));
+
+	HSACodeObject * hsa_code_obj = new HSACodeObject(p_code_obj);
+	hsa_code_obj->dev = dev;
+	return hsa_code_obj;
+}
+
+std::string HSAASMCompiler::GetBuildOption(){
+	return "-x assembler -target amdgcn--amdhsa -mcpu="GPU_ARCH;
+}
+
+HSAASMCompiler HSAASMCompiler::INSTANCE(BackendEngineHSA::Get());
+
+static std::string GetHSAClang(){
+	char * val = getenv("HSA_CLANG");
+	if(val)
+		return std::string(val);
+	// other wise, use clang in hcc
+	return "/opt/rocm/hcc/bin/clang";
+}
+
+CodeObject * HSAASMCompiler::operator()(const unsigned char * content, int bytes, DeviceBase * dev){
+	std::string compiler = GetHSAClang();
+	std::string tmp_dir =  GenerateTmpDir();
+	std::string src_file = tmp_dir + "/src.s";
+	std::string target_file = tmp_dir + "/target.co";
+
+	// write to src file
+	{
+		std::ofstream ofs(src_file.c_str(), std::ios::binary);
+		ofs.write((const char*)content, bytes);
+		ofs.flush();
+	}
+
+	std::string cmd;
+	cmd = compiler + " " + GetBuildOption() + " -o " + target_file + " " + src_file;
+
+	if(!ExecuteCmdSync(cmd.c_str())){
+		std::cerr<<"ERROR: compile fail for \""<<cmd<<"\"";
+		return nullptr;
+	}
+
+	// Second, load bin file and use OCL api to build
+	unsigned char * bin_content;
+	int bin_bytes;
+	if(GetFileContent(target_file.c_str(), &bin_content, &bin_bytes) != E_ReturnState::SUCCESS){
+		std::cerr<<"ERROR: fail to get object file "<<target_file<<std::endl;
+		return nullptr;
+	}
+
+	hsa_code_object_t code_object;
+	hsa_status_t status = hsa_code_object_deserialize((void*)bin_content, bin_bytes, NULL, &code_object);
 	if(status != HSA_STATUS_SUCCESS){
 		std::cerr<<"ERROR: fail to hsa_code_object_deserialize, status:"<<status<<std::endl;
 		return nullptr;

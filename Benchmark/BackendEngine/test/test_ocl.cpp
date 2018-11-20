@@ -21,8 +21,12 @@ static void random_vec(float * vec, int num){
 	}
 }
 
-//#define ENGINE() BackendEngine::Get("OpenCL")
-#define ENGINE() BackendEngine::Get("HSA")
+#define ENGINE_NAME "HSA"
+#define SRC_FILE "vector_add.s"
+#define COMPILER_NAME "asm"
+
+#define ENGINE() BackendEngine::Get(ENGINE_NAME)
+
 
 int main(){
 	//BackendEngineBase * engine = BackendEngine::Get("OpenCL");
@@ -39,34 +43,16 @@ int main(){
 	E_ReturnState rtn;
 	unsigned char * bin_content;
 	int bin_size;
-#if 0
-	rtn = GetFileContent("vector_add.bin", &bin_content, &bin_size);
+
+	rtn = GetFileContent(SRC_FILE, &bin_content, &bin_size);
 	assert(rtn == E_ReturnState::SUCCESS);
 
-	auto * compiler = new OCLBinaryCompiler(ENGINE());
-#endif
-#if 0
-	rtn = GetFileContent("vector_add.cl", &bin_content, &bin_size);
-	assert(rtn == E_ReturnState::SUCCESS);
-
-	auto * compiler = new OCLCCompiler(ENGINE());
-#endif
-#if 0
-	rtn = GetFileContent("vector_add.s", &bin_content, &bin_size);
-	assert(rtn == E_ReturnState::SUCCESS);
-
-	auto * compiler = new OCLASMCompiler(ENGINE());
-#endif
-	rtn = GetFileContent("vector_add.bin", &bin_content, &bin_size);
-	assert(rtn == E_ReturnState::SUCCESS);
-
-	auto * compiler = new HSABinaryCompiler(ENGINE());
-
+	auto * compiler = BackendEngine::GetCompiler(ENGINE(), COMPILER_NAME);
+	assert(compiler);
 
 	CodeObject * code_obj = (*compiler)(bin_content, bin_size, dev);
 	assert(code_obj);
 
-	delete compiler;
 	delete [] bin_content;
 
 	// dump code object to file

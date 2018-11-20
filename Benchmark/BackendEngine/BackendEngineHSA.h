@@ -12,23 +12,36 @@ public:
 
 	virtual int GetDeviceNum() const;
 	virtual DeviceBase * GetDevice(int index);
+	virtual BackendEngineType Type() const {return BACKEND_ENGINE_HSA;}
+
 
 	std::vector<std::unique_ptr<DeviceBase>> devices;
 private:
 	BackendEngineHSA(){}
-	static BackendEngineHSA INSTANCE;
 
 	virtual E_ReturnState Init();
 	virtual E_ReturnState Destroy();
 
 	friend class BackendEngine;
+	INSTANCE_DECLARE(BackendEngineHSA, BackendEngineBase)
 };
 
-class HSABinaryCompiler : public CompilerBase<BackendEngineHSA>{
+class HSABinaryCompiler : public CompilerBase{
 public:
-	HSABinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase( dynamic_cast<BackendEngineHSA*>(runtime_ctl_)){}
+	HSABinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 	~HSABinaryCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
+	INSTANCE_DECLARE(HSABinaryCompiler, CompilerBase)
+};
+
+class HSAASMCompiler : public CompilerBase{
+public:
+	HSAASMCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase( runtime_ctl_){}
+	~HSAASMCompiler(){}
+	virtual std::string GetBuildOption();
+
+	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
+	INSTANCE_DECLARE(HSAASMCompiler, CompilerBase)
 };
