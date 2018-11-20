@@ -28,20 +28,22 @@ private:
 
 class HSABinaryCompiler : public CompilerBase{
 public:
-	HSABinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 	~HSABinaryCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 	INSTANCE_DECLARE(HSABinaryCompiler, CompilerBase)
+private:
+	HSABinaryCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase(runtime_ctl_){}
 };
 
 class HSAASMCompiler : public CompilerBase{
 public:
-	HSAASMCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase( runtime_ctl_){}
 	~HSAASMCompiler(){}
 	virtual std::string GetBuildOption();
 
 	virtual CodeObject * operator()(const unsigned char * content, int bytes, DeviceBase * dev);
 	INSTANCE_DECLARE(HSAASMCompiler, CompilerBase)
+private:
+	HSAASMCompiler(BackendEngineBase * runtime_ctl_) : CompilerBase( runtime_ctl_){}
 };
